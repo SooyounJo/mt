@@ -1,56 +1,78 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const TurnModel = () => {
-  const { scene } = useGLTF('/3d/tu.glb');
+  const { scene } = useGLTF('/3d/tu2.glb');
+  const { gl } = useThree();
 
-  const groupRef = useRef();
-  const pivotRef = useRef();
+  const rotateRef = useRef();
 
   const [isRotating, setIsRotating] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
   const currentRotation = useRef(0);
 
-  // 더블클릭 핸들러
-  const handleDoubleClick = (e) => {
-    e.stopPropagation();
-
-    // 클릭한 대상이 turn.glb인지 확인
-    const clickedObject = e.object;
-    if (!groupRef.current || !groupRef.current.children.length) return;
-
-    const model = groupRef.current.children[0];
-    const isClickedOnTurnModel = model.uuid === clickedObject.uuid
-      || model.children.some(child => child.uuid === clickedObject.uuid);
-
-    if (!isClickedOnTurnModel) return;
-
-    // 더블클릭하면 항상 30도(=Math.PI/6) 추가 회전
-    const additionalRotation = Math.PI / 6;
-    setTargetRotation(currentRotation.current + additionalRotation);
-    setIsRotating(true);
+  // 기본 축 위치 설정
+  const defaultPosition = {
+    x: -0.3,  // X축 위치
+    y: -0.36, // Y축 위치
+    z: -0.5   // Z축 위치
   };
 
-  useFrame((state, delta) => {
-    if (isRotating && pivotRef.current) {
+  // 기본 회전 각도 설정 (라디안)
+  const defaultRotation = {
+    x: 0,     // X축 회전
+    y: 1.4,   // Y축 회전
+    z: 0      // Z축 회전
+  };
+
+  // 더블클릭 핸들러
+  useEffect(() => {
+    const handleDoubleClick = (e) => {
+      e.preventDefault();
+
+      const additionalRotation = -Math.PI / 6; // 반시계 방향 30도
+      const currentY = rotateRef.current?.rotation.y || 0;
+      const nextY = currentY + additionalRotation;
+
+      setTargetRotation(nextY);
+      setIsRotating(true);
+    };
+
+    const canvas = gl.domElement;
+    canvas.addEventListener('dblclick', handleDoubleClick);
+
+    return () => {
+      canvas.removeEventListener('dblclick', handleDoubleClick);
+    };
+  }, [gl]);
+
+  // 회전 애니메이션
+  useFrame((_, delta) => {
+    if (isRotating && rotateRef.current) {
       const speed = 8;
       const threshold = 0.01;
 
-      const newRotation = THREE.MathUtils.damp(currentRotation.current, targetRotation, speed, delta);
+      const newY = THREE.MathUtils.damp(
+        currentRotation.current,
+        targetRotation,
+        speed,
+        delta
+      );
 
-      if (Math.abs(newRotation - targetRotation) < threshold) {
-        pivotRef.current.rotation.y = targetRotation;
+      if (Math.abs(newY - targetRotation) < threshold) {
+        rotateRef.current.rotation.y = targetRotation;
         currentRotation.current = targetRotation;
         setIsRotating(false);
       } else {
-        pivotRef.current.rotation.y = newRotation;
-        currentRotation.current = newRotation;
+        rotateRef.current.rotation.y = newY;
+        currentRotation.current = newY;
       }
     }
   });
 
+  // 재질 설정
   useEffect(() => {
     if (scene) {
       scene.traverse((child) => {
@@ -58,7 +80,7 @@ const TurnModel = () => {
           child.material = new THREE.MeshStandardMaterial({
             color: 0x888888,
             metalness: 0.9,
-            roughness: 0.2
+            roughness: 0.2,
           });
         }
       });
@@ -66,17 +88,12 @@ const TurnModel = () => {
   }, [scene]);
 
   return (
-    <group position={[-0.3, -0.36, -0.5]} rotation={[0, 1.4, 0]}>
-      {/* 고정된 중심 pivot */}
-      <group ref={pivotRef} position={[0.5, 0.75, -0.8]}>
-        <group 
-          ref={groupRef} 
-          position={[-0.5, -0.75, 0.8]}
-          onDoubleClick={handleDoubleClick} // ✅ 더블클릭 이벤트로 바뀜
-        >
-          <primitive object={scene} scale={2.5} />
-        </group>
-      </group>
+    <group 
+      ref={rotateRef}
+      position={[defaultPosition.x, defaultPosition.y, defaultPosition.z]}
+      rotation={[defaultRotation.x, defaultRotation.y, defaultRotation.z]}
+    >
+      <primitive object={scene} scale={2.5} />
     </group>
   );
 };

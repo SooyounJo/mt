@@ -20,7 +20,7 @@ export default function Home() {
       >
         <color attach="background" args={['#1a1a1a']} />
         <ambientLight intensity={1} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
+        <directionalLight position={[10, 10, 5]} intensity={2} />
         <directionalLight position={[-10, -10, -5]} intensity={0.5} />
         <Environment preset="studio" intensity={1.5} />
         <GridSystem />
