@@ -50,14 +50,13 @@ const LPModel = () => {
     }
   }, [scene]);
 
-  // useFrame((state) => {
-  //   if (groupRef.current) {
-  //     // Y축을 기준으로만 회전 (물리적 이동 없음)
-  //     groupRef.current.rotation.y += 0.01;
-  //   }
-  // });
+  useFrame((state) => {
+    if (groupRef.current) {
+      // Y축을 기준으로만 회전 (물리적 이동 없음)
+      groupRef.current.rotation.y += 0.01;
+    }
+  });
 
-//잠시 멈춤
   return (
     <group position={[0.21, -0.36, 0.07]}>
       {/* 고정된 중심점 표시 */}
@@ -76,6 +75,5 @@ const LPModel = () => {
     </group>
   );
 };
-//
 
 export default LPModel; 
