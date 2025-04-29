@@ -50,28 +50,32 @@ const LPModel = () => {
     }
   }, [scene]);
 
-  useFrame((state) => {
-    if (groupRef.current) {
-      // Y축을 기준으로만 회전 (물리적 이동 없음)
-      groupRef.current.rotation.y += 0.01;
-    }
-  });
+  // useFrame((state) => {
+  //   if (groupRef.current) {
+  //     // Y축을 기준으로만 회전 (물리적 이동 없음)
+  //     groupRef.current.rotation.y += 0.01;
+  //   }
+  // });
 
+//잠시 멈춤
   return (
     <group position={[0.21, -0.36, 0.07]}>
-      {/* 회전 그룹 */}
-      <group ref={groupRef} position={modelCenter}>
-        <primitive 
-          object={scene} 
-          scale={2.5} 
-        />
-      </group>
       {/* 고정된 중심점 표시 */}
-      <Sphere args={[0.05]} position={modelCenter}>
+      <Sphere args={[0.05]} position={[0, 0, 0]}>
         <meshStandardMaterial color="red" emissive="red" emissiveIntensity={0.5} />
       </Sphere>
+      
+      {/* 회전 그룹 */}
+      <group ref={groupRef} position={[0, 0, 0]}>
+        <primitive 
+          object={scene} 
+          scale={2.5}
+          position={[0, 0, 0]} 
+        />
+      </group>
     </group>
   );
 };
+//
 
 export default LPModel; 
