@@ -41,7 +41,7 @@ const LPModel = () => {
   }, [scene]);
 
   return (
-    <group position={[0.21, -0.36, 0.07]}>
+    <group position={[0.2, -0.36, 0.08]}>
       {/* 회전 그룹 */}
       <group ref={groupRef} position={[0, 0, 0]}>
         <primitive 

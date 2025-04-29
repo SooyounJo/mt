@@ -1,40 +1,45 @@
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment } from '@react-three/drei';
-import { GridSystem } from '../components/Grid';
-import LPModel from '../components/models/LPModel';
+import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
+import GridSystem from '../components/models/GridSystem';
 import RecoModel from '../components/models/RecoModel';
+import LPModel from '../components/models/LPModel';
 import TurnModel from '../components/models/TurnModel';
+import Background from '../components/models/Background';
+import Season from '../components/models/Season';
 
 export default function Home() {
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, overflow: 'hidden' }}>
-      <Canvas 
-        style={{ width: '100%', height: '100%' }}
-        camera={{ 
-          position: [0, 3, 5], 
-          fov: 50,
-          near: 0.1,
-          far: 1000
-        }}
-      >
-        <color attach="background" args={['#1a1a1a']} />
-        <ambientLight intensity={1} />
-        <directionalLight position={[10, 10, 5]} intensity={2} />
-        <directionalLight position={[-10, -10, -5]} intensity={0.5} />
-        <Environment preset="studio" intensity={1.5} />
+    <div style={{ width: '100vw', height: '100vh' }}>
+      <Canvas>
+        <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+        <OrbitControls 
+          enableDamping={true}
+          dampingFactor={0.05}
+          rotateSpeed={0.5}
+          minDistance={2}
+          maxDistance={10}
+        />
+        
+        <ambientLight intensity={0.5} />
+        <directionalLight 
+          position={[-5, 5, 5]} 
+          intensity={1.5} 
+          castShadow
+        />
+        <directionalLight 
+          position={[5, 5, 5]} 
+          intensity={1} 
+          castShadow
+        />
+        <Environment preset="city" />
+        
+        {/* <Background /> */}
         <GridSystem />
         <RecoModel />
         <LPModel />
         <TurnModel />
-        <OrbitControls 
-          enableZoom={true}
-          enablePan={true}
-          enableRotate={true}
-          minDistance={3}
-          maxDistance={10}
-          target={[0, -1.5, 0]}
-        />
+        <Season />
       </Canvas>
     </div>
   );

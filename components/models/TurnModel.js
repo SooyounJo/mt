@@ -16,7 +16,7 @@ const TurnModel = () => {
   // 기본 축 위치 설정
   const defaultPosition = {
     x: -0.3,  // X축 위치
-    y: -0.36, // Y축 위치
+    y: -0.38, // Y축 위치
     z: -0.5   // Z축 위치
   };
 

@@ -3,9 +3,14 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 const RecoModel = () => {
-  const { scene } = useGLTF('/3d/reco.glb');
+  const { scene, error } = useGLTF('/3d/reco.glb', true);
   
   useEffect(() => {
+    if (error) {
+      console.error('모델 로딩 에러:', error);
+      return;
+    }
+
     if (scene) {
       const box = new THREE.Box3().setFromObject(scene);
       const center = new THREE.Vector3();
@@ -31,7 +36,11 @@ const RecoModel = () => {
         }
       });
     }
-  }, [scene]);
+  }, [scene, error]);
+
+  if (error) {
+    return null;
+  }
 
   return (
     <primitive 
