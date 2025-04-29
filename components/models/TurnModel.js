@@ -1,50 +1,64 @@
-import React, { useRef } from 'react';
-import { useGLTF, Sphere } from '@react-three/drei';
+import React, { useRef, useState, useEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const TurnModel = () => {
-  const { scene } = useGLTF('/3d/turn.glb');
+  const { scene } = useGLTF('/3d/tu.glb');
+
   const groupRef = useRef();
-  const isRotating = useRef(false);
-  const targetRotation = useRef(0);
-  
+  const pivotRef = useRef();
+
+  const [isRotating, setIsRotating] = useState(false);
+  const [targetRotation, setTargetRotation] = useState(0);
+  const currentRotation = useRef(0);
+
+  // 더블클릭 핸들러
   const handleDoubleClick = (e) => {
     e.stopPropagation();
-    if (!isRotating.current) {
-      isRotating.current = true;
-      targetRotation.current = groupRef.current.rotation.y + Math.PI * 2; // 360도 회전
-    }
+
+    // 클릭한 대상이 turn.glb인지 확인
+    const clickedObject = e.object;
+    if (!groupRef.current || !groupRef.current.children.length) return;
+
+    const model = groupRef.current.children[0];
+    const isClickedOnTurnModel = model.uuid === clickedObject.uuid
+      || model.children.some(child => child.uuid === clickedObject.uuid);
+
+    if (!isClickedOnTurnModel) return;
+
+    // 더블클릭하면 항상 30도(=Math.PI/6) 추가 회전
+    const additionalRotation = Math.PI / 6;
+    setTargetRotation(currentRotation.current + additionalRotation);
+    setIsRotating(true);
   };
 
   useFrame((state, delta) => {
-    if (isRotating.current && groupRef.current) {
-      const currentRotation = groupRef.current.rotation.y;
-      const rotationSpeed = 2; // 회전 속도 조절
-      
-      if (Math.abs(currentRotation - targetRotation.current) > 0.01) {
-        groupRef.current.rotation.y = THREE.MathUtils.lerp(
-          currentRotation,
-          targetRotation.current,
-          delta * rotationSpeed
-        );
+    if (isRotating && pivotRef.current) {
+      const speed = 8;
+      const threshold = 0.01;
+
+      const newRotation = THREE.MathUtils.damp(currentRotation.current, targetRotation, speed, delta);
+
+      if (Math.abs(newRotation - targetRotation) < threshold) {
+        pivotRef.current.rotation.y = targetRotation;
+        currentRotation.current = targetRotation;
+        setIsRotating(false);
       } else {
-        groupRef.current.rotation.y = targetRotation.current;
-        isRotating.current = false;
+        pivotRef.current.rotation.y = newRotation;
+        currentRotation.current = newRotation;
       }
     }
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (scene) {
-      // 모든 메시에 알루미늄 재질 적용
       scene.traverse((child) => {
         if (child.isMesh) {
           child.material = new THREE.MeshStandardMaterial({
             color: 0x888888,
             metalness: 0.9,
-            roughness: 0.2,
-            envMapIntensity: 1.5
+            roughness: 0.2
           });
         }
       });
@@ -52,23 +66,19 @@ const TurnModel = () => {
   }, [scene]);
 
   return (
-    <group position={[0.4, -1.1, 0.1]} rotation={[0, 1.4, 0]}>
-      {/* 회전 그룹 */}
-      <group 
-        ref={groupRef}
-        onDoubleClick={handleDoubleClick}
-      >
-        <primitive 
-          object={scene} 
-          scale={2.5} 
-        />
+    <group position={[-0.3, -0.36, -0.5]} rotation={[0, 1.4, 0]}>
+      {/* 고정된 중심 pivot */}
+      <group ref={pivotRef} position={[0.5, 0.75, -0.8]}>
+        <group 
+          ref={groupRef} 
+          position={[-0.5, -0.75, 0.8]}
+          onDoubleClick={handleDoubleClick} // ✅ 더블클릭 이벤트로 바뀜
+        >
+          <primitive object={scene} scale={2.5} />
+        </group>
       </group>
-      {/* 고정된 중심점 표시 */}
-      <Sphere args={[0.05]} position={[0.5, 0.75, -0.8]}>
-        <meshStandardMaterial color="purple" emissive="purple" emissiveIntensity={0.5} />
-      </Sphere>
     </group>
   );
 };
 
-export default TurnModel; 
+export default TurnModel;
