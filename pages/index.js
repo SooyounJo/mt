@@ -7,6 +7,7 @@ import LPModel from '../components/models/LPModel';
 import TurnModel from '../components/models/TurnModel';
 import Background from '../components/models/Background';
 import Season from '../components/models/Season';
+import Weather from '../components/models/Weather';
 
 export default function Home() {
   return (
@@ -40,6 +41,7 @@ export default function Home() {
         <LPModel />
         <TurnModel />
         <Season />
+        <Weather />
       </Canvas>
     </div>
   );
