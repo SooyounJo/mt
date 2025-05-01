@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 
 const Season = () => {
-  const { scene } = useGLTF('/3d/ele.glb');
+  const { scene } = useGLTF('/3d/mini-block/season.glb');
   const modelRef = useRef();
 
   useEffect(() => {
@@ -15,7 +15,7 @@ const Season = () => {
     <primitive
       ref={modelRef}
       object={scene}
-      position={[0, -1, -1.3]}
+      position={[0.8, -1, -1.3]}
       scale={6}
       rotation={[0, Math.PI / 2, 0]}
     />

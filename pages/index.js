@@ -6,8 +6,9 @@ import RecoModel from '../components/models/RecoModel';
 import LPModel from '../components/models/LPModel';
 import TurnModel from '../components/models/TurnModel';
 import Background from '../components/models/Background';
-import Season from '../components/models/Season';
-import Weather from '../components/models/Weather';
+import Season from '../components/models/mini-block/Season';
+import Weather from '../components/models/mini-block/Weather';
+import Place from '../components/models/mini-block/Place';
 
 export default function Home() {
   return (
@@ -34,8 +35,11 @@ export default function Home() {
           castShadow
         />
         
-        {/* <Background /> */}
+        <Environment preset="sunset" />
+        
+        <Background />
         <GridSystem />
+        <Place />
         <RecoModel />
         <LPModel />
         <TurnModel />
