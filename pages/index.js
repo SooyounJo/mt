@@ -17,6 +17,7 @@ import Control from '../components/system/Control';
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0, z: 0 });
   const [activeModel, setActiveModel] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handlePointerMove = (event) => {
     if (event.intersects && event.intersects.length > 0) {
@@ -51,7 +52,7 @@ export default function Home() {
           shadowMap: { type: THREE.PCFSoftShadowMap }
         }}
       >
-        <Control />
+        <Control isDragging={isDragging} />
         <Light />
         
         <Background receiveShadow castShadow />
@@ -63,6 +64,8 @@ export default function Home() {
           receiveShadow 
           castShadow 
           visible={activeModel === 'season'}
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={() => setIsDragging(false)}
         />
         <Weather 
           receiveShadow 

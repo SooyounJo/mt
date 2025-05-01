@@ -1,7 +1,7 @@
 import React from 'react';
 import { PerspectiveCamera, OrbitControls } from '@react-three/drei';
 
-const Control = () => {
+const Control = ({ isDragging = false }) => {
   return (
     <>
       <PerspectiveCamera 
@@ -15,6 +15,7 @@ const Control = () => {
         rotateSpeed={0.5}
         minDistance={2}
         maxDistance={40}
+        enabled={!isDragging}
       />
     </>
   );

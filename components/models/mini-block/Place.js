@@ -14,6 +14,17 @@ const Place = ({ visible = true }) => {
           child.frustumCulled = false;
           child.visible = visible;
           child.renderOrder = 1;
+          
+          // 기존 material 속성 유지하면서 새로운 material 적용
+          const originalMaterial = child.material;
+          child.material = new THREE.MeshPhysicalMaterial({
+            ...originalMaterial,
+            color: originalMaterial.color,
+            metalness: 0.1,
+            roughness: 0.1,
+            clearcoat: 1,
+            clearcoatRoughness: 0.1
+          });
         }
       });
     }
