@@ -29,40 +29,25 @@ const RecoModel = () => {
 
         // 기존 material logic 그대로 유지
         if (originalMaterial.color.getHex() === 0xff0000) {
-          child.material = new THREE.MeshPhysicalMaterial({
+          child.material = new THREE.MeshStandardMaterial({
             color: 0xff0000,
             metalness: 0.0,
             roughness: 0.1,
-            transmission: 0.0,
-            thickness: 0.5,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.1,
-            envMapIntensity: 1.0,
-            ior: 1.5,
             emissive: 0xff0000,
             emissiveIntensity: 0.2
           });
         } else if (originalMaterial.color.getHex() === 0xffffff) {
           if (maxDimension < 1.0) {
-            child.material = new THREE.MeshPhysicalMaterial({
+            child.material = new THREE.MeshStandardMaterial({
               color: 0xcccccc,
               metalness: 0.9,
-              roughness: 0.2,
-              clearcoat: 1.0,
-              clearcoatRoughness: 0.1,
-              envMapIntensity: 1.5
+              roughness: 0.2
             });
           } else {
-            child.material = new THREE.MeshPhysicalMaterial({
+            child.material = new THREE.MeshStandardMaterial({
               color: 0xffffff,
               metalness: 0.0,
-              roughness: 0.1,
-              transmission: 0.9,
-              thickness: 0.5,
-              clearcoat: 1.0,
-              clearcoatRoughness: 0.1,
-              envMapIntensity: 1.0,
-              ior: 1.5
+              roughness: 0.1
             });
           }
         }
