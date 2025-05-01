@@ -37,6 +37,7 @@ const LPModel = () => {
             color: 0x000000,
             metalness: 0.7,
             roughness: 0.2,
+            envMapIntensity: 1.2
           });
         }
       }

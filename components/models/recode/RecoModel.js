@@ -13,6 +13,9 @@ const RecoModel = () => {
     box.getCenter(center);
     scene.position.sub(center);
 
+    // 메시 크기 순으로 정렬하기 위한 배열
+    const meshes = [];
+
     scene.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
@@ -27,29 +30,51 @@ const RecoModel = () => {
         meshBox.getSize(size);
         const maxDimension = Math.max(size.x, size.y, size.z);
 
-        // 기존 material logic 그대로 유지
-        if (originalMaterial.color.getHex() === 0xff0000) {
-          child.material = new THREE.MeshStandardMaterial({
-            color: 0xff0000,
-            metalness: 0.0,
-            roughness: 0.1,
-            emissive: 0xff0000,
-            emissiveIntensity: 0.2
+        // 메시와 크기 정보 저장
+        meshes.push({ mesh: child, size: maxDimension, originalMaterial });
+      }
+    });
+
+    // 크기 순으로 정렬
+    meshes.sort((a, b) => b.size - a.size);
+
+    // 메시별 재질 설정
+    meshes.forEach((item, index) => {
+      const { mesh, originalMaterial } = item;
+
+      if (index === 1) { // 두 번째로 큰 메시
+        mesh.material = new THREE.MeshPhysicalMaterial({
+          color: originalMaterial.color.getHex(),
+          metalness: 0.0,
+          roughness: 0.1,
+          transmission: 0.9,  // 투명도
+          thickness: 0.5,     // 두께
+          clearcoat: 1.0,     // 코팅
+          clearcoatRoughness: 0.1,
+          envMapIntensity: 1.0,
+          ior: 1.5           // 굴절률
+        });
+      } else if (originalMaterial.color.getHex() === 0xff0000) {
+        mesh.material = new THREE.MeshStandardMaterial({
+          color: 0xff0000,
+          metalness: 0.0,
+          roughness: 0.1,
+          emissive: 0xff0000,
+          emissiveIntensity: 0.2
+        });
+      } else if (originalMaterial.color.getHex() === 0xffffff) {
+        if (item.size < 1.0) {
+          mesh.material = new THREE.MeshStandardMaterial({
+            color: 0xcccccc,
+            metalness: 0.9,
+            roughness: 0.2
           });
-        } else if (originalMaterial.color.getHex() === 0xffffff) {
-          if (maxDimension < 1.0) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xcccccc,
-              metalness: 0.9,
-              roughness: 0.2
-            });
-          } else {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xffffff,
-              metalness: 0.0,
-              roughness: 0.1
-            });
-          }
+        } else {
+          mesh.material = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            metalness: 0.0,
+            roughness: 0.1
+          });
         }
       }
     });

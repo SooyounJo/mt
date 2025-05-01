@@ -1,46 +1,80 @@
-import React, { useEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useRef, useState } from 'react';
+import { Text3D, Center } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 
-const Model123 = () => {
-  const { scene } = useGLTF('/3d/mini-block/123.glb');
+const NumberBlock = ({ number, position, isActive, onClick }) => {
+  const meshRef = useRef();
+  const [isHovered, setIsHovered] = useState(false);
 
-  useEffect(() => {
-    if (scene) {
-      scene.traverse((child) => {
-        if (child.isMesh) {
-          const originalMaterial = child.material;
-          const originalColor = originalMaterial.color.getHex();
-          
-          child.material = new THREE.MeshPhysicalMaterial({
-            color: originalColor,  // 원래 색상 유지
-            metalness: 0.0,
-            roughness: 0.1,
-            transmission: 0.9,  // 투명도 높게 설정
-            thickness: 0.5,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.1,
-            envMapIntensity: 1.0,
-            ior: 1.5  // 굴절률 설정
-          });
-          child.castShadow = true;
-          child.receiveShadow = true;
-          child.frustumCulled = false;
-          child.visible = true;
-          child.renderOrder = 1;
-        }
-      });
-    }
-  }, [scene]);
+  useFrame(() => {
+    if (!meshRef.current) return;
+    
+    const targetY = isActive ? 0.5 : 0;
+    meshRef.current.position.y += (targetY - meshRef.current.position.y) * 0.1;
+  });
 
   return (
-    <primitive
-      object={scene}
-      position={[-0.6, -1, -1.3]}
-      rotation={[0, Math.PI / 2, 0]}
-      scale={7}
-    />
+    <Text3D
+      ref={meshRef}
+      font="https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/fonts/helvetiker_regular.typeface.json"
+      size={0.5}
+      height={0.2}
+      curveSegments={12}
+      bevelEnabled
+      bevelThickness={0.02}
+      bevelSize={0.02}
+      bevelOffset={0}
+      bevelSegments={5}
+      position={position}
+      onPointerOver={() => setIsHovered(true)}
+      onPointerOut={() => setIsHovered(false)}
+      onClick={onClick}
+    >
+      {number}
+      <meshPhysicalMaterial
+        color={isHovered ? "#ff3333" : "#ffffff"}
+        metalness={0.1}
+        roughness={0.1}
+        transmission={0.9}
+        thickness={0.5}
+        clearcoat={1}
+        clearcoatRoughness={0.1}
+      />
+    </Text3D>
   );
 };
 
-export default Model123; 
+const Model123 = () => {
+  const [activeNumber, setActiveNumber] = useState(null);
+
+  const handleClick = (number) => {
+    setActiveNumber(activeNumber === number ? null : number);
+  };
+
+  return (
+    <group position={[-0.6, -0.8, -2]} rotation={[0, Math.PI / 2, 0]} scale={0.875}>
+      <Center>
+        <NumberBlock 
+          number="1" 
+          position={[-0.5, 0, 0]} 
+          isActive={activeNumber === "1"}
+          onClick={() => handleClick("1")}
+        />
+        <NumberBlock 
+          number="2" 
+          position={[0, 0, 0]} 
+          isActive={activeNumber === "2"}
+          onClick={() => handleClick("2")}
+        />
+        <NumberBlock 
+          number="3" 
+          position={[0.5, 0, 0]} 
+          isActive={activeNumber === "3"}
+          onClick={() => handleClick("3")}
+        />
+      </Center>
+    </group>
+  );
+};
+
+export default Model123;
