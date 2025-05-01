@@ -7,6 +7,7 @@ const Season = ({ visible = true, onDragStart, onDragEnd, onDrop }) => {
   const { scene } = useGLTF('/3d/mini-block/season.glb');
   const modelRef = useRef();
   const [isDraggable, setIsDraggable] = useState(false);
+  const [isOnLP, setIsOnLP] = useState(false);
   const { camera, gl, scene: threeScene } = useThree();
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -44,24 +45,29 @@ const Season = ({ visible = true, onDragStart, onDragEnd, onDrop }) => {
     scene.traverse((child) => {
       if (child.isMesh) {
         const originalMaterial = originalMaterials.current[child.uuid];
-        child.material = new THREE.MeshStandardMaterial({
-          color: isRed ? new THREE.Color('#ff0000') : originalMaterial.color,
-          metalness: originalMaterial.metalness,
-          roughness: originalMaterial.roughness,
-          transparent: originalMaterial.transparent,
-          opacity: originalMaterial.opacity,
-        });
+        // LP 위에 있을 때는 색상 변경하지 않음
+        if (isOnLP) {
+          child.material = originalMaterial.clone();
+        } else {
+          child.material = new THREE.MeshStandardMaterial({
+            color: isRed ? new THREE.Color('#ff0000') : originalMaterial.color,
+            metalness: originalMaterial.metalness,
+            roughness: originalMaterial.roughness,
+            transparent: originalMaterial.transparent,
+            opacity: originalMaterial.opacity,
+          });
+        }
       }
     });
   };
 
   useEffect(() => {
     updateMaterials(isDraggable);
-  }, [isDraggable, scene]);
+  }, [isDraggable, isOnLP, scene]);
 
   const handlePointerEnter = (e) => {
     e.stopPropagation();
-    if (visible) {
+    if (visible && !isOnLP) {
       setIsDraggable(true);
       document.body.style.cursor = 'grab';
     }
@@ -116,17 +122,19 @@ const Season = ({ visible = true, onDragStart, onDragEnd, onDrop }) => {
       modelRef.current.isDragging = false;
       document.body.style.cursor = 'auto';
       
-      const isOnLP = isOverLP(modelRef.current.position);
-      if (isOnLP) {
+      const droppedOnLP = isOverLP(modelRef.current.position);
+      if (droppedOnLP) {
         const snapPosition = snapToLP();
         modelRef.current.position.set(snapPosition.x, snapPosition.y, snapPosition.z);
+        setIsOnLP(true);
       } else {
         modelRef.current.position.set(...originalPosition.current);
+        setIsOnLP(false);
       }
 
       // LP 위에 드롭되었는지 여부를 부모 컴포넌트에 알림
       if (onDrop) {
-        onDrop(isOnLP);
+        onDrop(droppedOnLP);
       }
 
       if (onDragEnd) onDragEnd();
