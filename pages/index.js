@@ -20,7 +20,7 @@ export default function Home() {
           dampingFactor={0.05}
           rotateSpeed={0.5}
           minDistance={2}
-          maxDistance={10}
+          maxDistance={40}
         />
         
         <ambientLight intensity={0.5} />
