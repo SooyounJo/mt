@@ -1,11 +1,22 @@
 import React, { useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 
 const Place = () => {
   const { scene } = useGLTF('/3d/mini-block/place.glb');
 
   useEffect(() => {
-    console.log('Place model loaded:', scene);
+    if (scene) {
+      scene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.frustumCulled = false;
+          child.visible = true;
+          child.renderOrder = 1;
+        }
+      });
+    }
   }, [scene]);
 
   return (

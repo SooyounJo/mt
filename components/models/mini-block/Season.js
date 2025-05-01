@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 
 const Season = () => {
   const { scene } = useGLTF('/3d/mini-block/season.glb');
@@ -7,7 +8,15 @@ const Season = () => {
 
   useEffect(() => {
     if (scene) {
-      console.log('Model initial rotation:', scene.rotation);
+      scene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.frustumCulled = false;
+          child.visible = true;
+          child.renderOrder = 1;
+        }
+      });
     }
   }, [scene]);
 

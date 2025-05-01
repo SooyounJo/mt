@@ -8,32 +8,25 @@ const TurnModel = () => {
   const { gl } = useThree();
 
   const rotateRef = useRef();
-
   const [isRotating, setIsRotating] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
-  const [isAtDefault, setIsAtDefault] = useState(true); // 회전 상태 추적
+  const [isAtDefault, setIsAtDefault] = useState(true);
   const currentRotation = useRef(0);
 
   const defaultPosition = { x: -0.3, y: -0.38, z: -0.5 };
   const defaultRotation = { x: 0, y: 1.4, z: 0 };
   const ROTATION_AMOUNT = -Math.PI / 6;
 
-  // 초기 회전값 설정 (튀김 현상 방지)
   useEffect(() => {
     currentRotation.current = defaultRotation.y;
     setTargetRotation(defaultRotation.y);
   }, []);
 
-  // 더블클릭 시 회전 방향 토글
   useEffect(() => {
     const handleDoubleClick = (e) => {
       e.preventDefault();
-
       const baseRotation = defaultRotation.y;
-      const newTarget = isAtDefault
-        ? baseRotation + ROTATION_AMOUNT
-        : baseRotation;
-
+      const newTarget = isAtDefault ? baseRotation + ROTATION_AMOUNT : baseRotation;
       setTargetRotation(newTarget);
       setIsRotating(true);
       setIsAtDefault(!isAtDefault);
@@ -41,26 +34,13 @@ const TurnModel = () => {
 
     const canvas = gl.domElement;
     canvas.addEventListener('dblclick', handleDoubleClick);
-
-    return () => {
-      canvas.removeEventListener('dblclick', handleDoubleClick);
-    };
+    return () => canvas.removeEventListener('dblclick', handleDoubleClick);
   }, [gl, isAtDefault]);
 
-  // 회전 애니메이션
   useFrame((_, delta) => {
     if (isRotating && rotateRef.current) {
-      const speed = 8;
-      const threshold = 0.01;
-
-      const newY = THREE.MathUtils.damp(
-        currentRotation.current,
-        targetRotation,
-        speed,
-        delta
-      );
-
-      if (Math.abs(newY - targetRotation) < threshold) {
+      const newY = THREE.MathUtils.damp(currentRotation.current, targetRotation, 8, delta);
+      if (Math.abs(newY - targetRotation) < 0.01) {
         rotateRef.current.rotation.y = targetRotation;
         currentRotation.current = targetRotation;
         setIsRotating(false);
@@ -71,11 +51,15 @@ const TurnModel = () => {
     }
   });
 
-  // 재질 설정
   useEffect(() => {
     if (scene) {
       scene.traverse((child) => {
         if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.frustumCulled = false;
+          child.visible = true;
+          child.renderOrder = 1;
           child.material = new THREE.MeshPhysicalMaterial({
             color: 0xffffff,
             metalness: 0.8,
@@ -103,3 +87,4 @@ const TurnModel = () => {
 };
 
 export default TurnModel;
+

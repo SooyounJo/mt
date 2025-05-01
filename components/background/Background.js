@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 
 const Background = () => {
-  const { scene } = useGLTF('/3d/background/back.glb');
-  
+  const { scene } = useGLTF('/3d/background/backg.glb');
+
+  useEffect(() => {
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.frustumCulled = false;
+        child.visible = true;
+        child.renderOrder = 1;
+      }
+    });
+  }, [scene]);
+
   return (
     <primitive 
       object={scene} 
@@ -14,4 +26,4 @@ const Background = () => {
   );
 };
 
-export default Background; 
+export default Background;

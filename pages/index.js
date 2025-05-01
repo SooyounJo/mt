@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
+import * as THREE from 'three';
 import GridSystem from '../components/system/GridSystem';
 import RecoModel from '../components/models/recode/RecoModel';
 import LPModel from '../components/models/recode/LPModel';
@@ -12,6 +12,7 @@ import Place from '../components/models/mini-block/Place';
 import Model123 from '../components/models/mini-block/123';
 import Grid from '../components/system/Grid';
 import Light from '../components/background/Light';
+import Control from '../components/system/Control';
 
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0, z: 0 });
@@ -31,29 +32,32 @@ export default function Home() {
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <Grid mousePosition={mousePosition} />
 
-      <Canvas onPointerMove={handlePointerMove}>
-        <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-        <OrbitControls 
-          enableDamping={true}
-          dampingFactor={0.05}
-          rotateSpeed={0.5}
-          minDistance={2}
-          maxDistance={40}
-        />
-        
+      <Canvas 
+        onPointerMove={handlePointerMove}
+        shadows={{ 
+          type: 'PCFSoftShadowMap',
+          enabled: true
+        }}
+        camera={{ position: [0, 5, 10], fov: 50 }}
+        gl={{ 
+          antialias: true,
+          alpha: true,
+          physicallyCorrectLights: true,
+          shadowMap: { type: THREE.PCFSoftShadowMap }
+        }}
+      >
+        <Control />
         <Light />
         
-        <Environment preset="sunset" />
-        
-        <Background />
-        <GridSystem />
-        <RecoModel />
-        <LPModel />
-        <TurnModel />
-        <Season />
-        <Weather />
-        <Place />
-        <Model123 />
+        <Background receiveShadow castShadow />
+        <GridSystem receiveShadow />
+        <RecoModel receiveShadow castShadow />
+        <LPModel receiveShadow castShadow />
+        <TurnModel receiveShadow castShadow />
+        <Season receiveShadow castShadow />
+        <Weather receiveShadow castShadow />
+        <Place receiveShadow castShadow />
+        <Model123 receiveShadow castShadow />
       </Canvas>
     </div>
   );

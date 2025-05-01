@@ -23,6 +23,11 @@ const Model123 = () => {
             envMapIntensity: 1.0,
             ior: 1.5  // 굴절률 설정
           });
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.frustumCulled = false;
+          child.visible = true;
+          child.renderOrder = 1;
         }
       });
     }
