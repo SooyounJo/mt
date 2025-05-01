@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const Weather = () => {
+const Weather = ({ visible = true }) => {
   const { scene } = useGLTF('/3d/mini-block/wea.glb');
   const [position, setPosition] = useState([0, -1, -1.3]);
   const [rotation, setRotation] = useState([0, Math.PI / 2, 0]);
@@ -13,6 +13,16 @@ const Weather = () => {
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   const lastMouse = new THREE.Vector2();
+
+  useEffect(() => {
+    if (scene) {
+      scene.traverse((child) => {
+        if (child.isMesh) {
+          child.visible = visible;
+        }
+      });
+    }
+  }, [scene, visible]);
 
   const handlePointerDown = (e) => {
     e.stopPropagation();
@@ -75,7 +85,7 @@ const Weather = () => {
   return (
     <primitive
       object={scene}
-      position={[1.3, -1, -1.3]}
+      position={[0.7, -1, -1.3]}
       rotation={[0, Math.PI / 2, 0]}
       scale={8}
       onPointerDown={handlePointerDown}

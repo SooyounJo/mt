@@ -44,11 +44,23 @@ const NumberBlock = ({ number, position, isActive, onClick }) => {
   );
 };
 
-const Model123 = () => {
+const Model123 = ({ onModelChange }) => {
   const [activeNumber, setActiveNumber] = useState(null);
 
   const handleClick = (number) => {
-    setActiveNumber(activeNumber === number ? null : number);
+    const newActiveNumber = activeNumber === number ? null : number;
+    setActiveNumber(newActiveNumber);
+    
+    // 숫자에 따라 다른 모델을 활성화
+    if (newActiveNumber === "1") {
+      onModelChange('season');
+    } else if (newActiveNumber === "2") {
+      onModelChange('place');
+    } else if (newActiveNumber === "3") {
+      onModelChange('weather');
+    } else {
+      onModelChange(null);
+    }
   };
 
   return (

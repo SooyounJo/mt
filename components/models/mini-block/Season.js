@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-const Season = () => {
+const Season = ({ visible = true }) => {
   const { scene } = useGLTF('/3d/mini-block/season.glb');
   const modelRef = useRef();
 
@@ -13,18 +13,18 @@ const Season = () => {
           child.castShadow = true;
           child.receiveShadow = true;
           child.frustumCulled = false;
-          child.visible = true;
+          child.visible = visible;
           child.renderOrder = 1;
         }
       });
     }
-  }, [scene]);
+  }, [scene, visible]);
 
   return (
     <primitive
       ref={modelRef}
       object={scene}
-      position={[1.3, -1, -1.3]}
+      position={[0.6, -1, -1.3]}
       scale={6}
       rotation={[0, Math.PI / 2, 0]}
     />
