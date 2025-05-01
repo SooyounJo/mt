@@ -3,7 +3,7 @@ import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const Season = ({ visible = true, onDragStart, onDragEnd }) => {
+const Season = ({ visible = true, onDragStart, onDragEnd, onDrop }) => {
   const { scene } = useGLTF('/3d/mini-block/season.glb');
   const modelRef = useRef();
   const [isDraggable, setIsDraggable] = useState(false);
@@ -116,14 +116,17 @@ const Season = ({ visible = true, onDragStart, onDragEnd }) => {
       modelRef.current.isDragging = false;
       document.body.style.cursor = 'auto';
       
-      // LP 위에 있는지 확인
-      if (isOverLP(modelRef.current.position)) {
-        // LP 위치로 스냅
+      const isOnLP = isOverLP(modelRef.current.position);
+      if (isOnLP) {
         const snapPosition = snapToLP();
         modelRef.current.position.set(snapPosition.x, snapPosition.y, snapPosition.z);
       } else {
-        // 원래 위치로 복귀
         modelRef.current.position.set(...originalPosition.current);
+      }
+
+      // LP 위에 드롭되었는지 여부를 부모 컴포넌트에 알림
+      if (onDrop) {
+        onDrop(isOnLP);
       }
 
       if (onDragEnd) onDragEnd();

@@ -18,6 +18,7 @@ export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0, z: 0 });
   const [activeModel, setActiveModel] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [seasonOnLP, setSeasonOnLP] = useState(false);
 
   const handlePointerMove = (event) => {
     if (event.intersects && event.intersects.length > 0) {
@@ -33,6 +34,14 @@ export default function Home() {
   const handleModelChange = (model) => {
     setActiveModel(model);
   };
+
+  const handleSeasonDrop = (isOnLP) => {
+    setSeasonOnLP(isOnLP);
+  };
+
+  const isSeasonVisible = seasonOnLP || activeModel === 'season';
+  const isWeatherVisible = activeModel === 'weather';
+  const isPlaceVisible = activeModel === 'place';
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -63,19 +72,20 @@ export default function Home() {
         <Season 
           receiveShadow 
           castShadow 
-          visible={activeModel === 'season'}
+          visible={isSeasonVisible}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={() => setIsDragging(false)}
+          onDrop={handleSeasonDrop}
         />
         <Weather 
           receiveShadow 
           castShadow 
-          visible={activeModel === 'weather'}
+          visible={isWeatherVisible}
         />
         <Place 
           receiveShadow 
           castShadow 
-          visible={activeModel === 'place'}
+          visible={isPlaceVisible}
         />
         <Model123 
           receiveShadow 
