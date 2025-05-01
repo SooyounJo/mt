@@ -11,7 +11,7 @@ const Place = () => {
   return (
     <primitive
       object={scene}
-      position={[0.8, -1, -1.2]}
+      position={[1.3, -1, -1.2]}
       rotation={[0, 0, 0]}
       scale={7}
     />

@@ -15,7 +15,7 @@ const Season = () => {
     <primitive
       ref={modelRef}
       object={scene}
-      position={[0.8, -1, -1.3]}
+      position={[1.3, -1, -1.3]}
       scale={6}
       rotation={[0, Math.PI / 2, 0]}
     />

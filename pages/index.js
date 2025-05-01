@@ -2,13 +2,14 @@ import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import GridSystem from '../components/models/GridSystem';
-import RecoModel from '../components/models/RecoModel';
-import LPModel from '../components/models/LPModel';
-import TurnModel from '../components/models/TurnModel';
+import RecoModel from '../components/models/recode/RecoModel';
+import LPModel from '../components/models/recode/LPModel';
+import TurnModel from '../components/models/recode/TurnModel';
 import Background from '../components/models/Background';
 import Season from '../components/models/mini-block/Season';
 import Weather from '../components/models/mini-block/Weather';
 import Place from '../components/models/mini-block/Place';
+import Model123 from '../components/models/mini-block/123';
 
 export default function Home() {
   return (
@@ -45,6 +46,7 @@ export default function Home() {
         <TurnModel />
         <Season />
         <Weather />
+        <Model123 />
       </Canvas>
     </div>
   );
