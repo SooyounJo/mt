@@ -20,18 +20,50 @@ const RecoModel = () => {
       scene.traverse((child) => {
         if (child.isMesh) {
           const originalMaterial = child.material;
-          if (originalMaterial.color.getHex() === 0xffffff) {
+          const meshBox = new THREE.Box3().setFromObject(child);
+          const size = new THREE.Vector3();
+          meshBox.getSize(size);
+          const maxDimension = Math.max(size.x, size.y, size.z);
+
+          if (originalMaterial.color.getHex() === 0xff0000) {
             child.material = new THREE.MeshPhysicalMaterial({
-              color: 0xffffff,
+              color: 0xff0000,
               metalness: 0.0,
               roughness: 0.1,
-              transmission: 0.9,
+              transmission: 0.0,
               thickness: 0.5,
               clearcoat: 1.0,
               clearcoatRoughness: 0.1,
               envMapIntensity: 1.0,
-              ior: 1.5
+              ior: 1.5,
+              emissive: 0xff0000,
+              emissiveIntensity: 0.2
             });
+          } else if (originalMaterial.color.getHex() === 0xffffff) {
+            if (maxDimension < 1.0) {
+              child.material = new THREE.MeshPhysicalMaterial({
+                color: 0xcccccc,
+                metalness: 0.9,
+                roughness: 0.2,
+                transmission: 0.0,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                envMapIntensity: 1.5,
+                reflectivity: 1.0
+              });
+            } else {
+              child.material = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                metalness: 0.0,
+                roughness: 0.1,
+                transmission: 0.9,
+                thickness: 0.5,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                envMapIntensity: 1.0,
+                ior: 1.5
+              });
+            }
           }
         }
       });

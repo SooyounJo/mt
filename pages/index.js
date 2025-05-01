@@ -33,7 +33,6 @@ export default function Home() {
           intensity={1} 
           castShadow
         />
-        <Environment preset="city" />
         
         {/* <Background /> */}
         <GridSystem />

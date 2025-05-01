@@ -46,7 +46,7 @@ const LPModel = () => {
       <group ref={groupRef} position={[0, 0, 0]}>
         <primitive 
           object={scene} 
-          scale={2.5}
+          scale={2.7}
           position={[0, 0, 0]} 
         />
       </group>

@@ -11,33 +11,32 @@ const TurnModel = () => {
 
   const [isRotating, setIsRotating] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
+  const [isAtDefault, setIsAtDefault] = useState(true); // 회전 상태 추적
   const currentRotation = useRef(0);
 
-  // 기본 축 위치 설정
-  const defaultPosition = {
-    x: -0.3,  // X축 위치
-    y: -0.38, // Y축 위치
-    z: -0.5   // Z축 위치
-  };
+  const defaultPosition = { x: -0.3, y: -0.38, z: -0.5 };
+  const defaultRotation = { x: 0, y: 1.4, z: 0 };
+  const ROTATION_AMOUNT = -Math.PI / 6;
 
-  // 기본 회전 각도 설정 (라디안)
-  const defaultRotation = {
-    x: 0,     // X축 회전
-    y: 1.4,   // Y축 회전
-    z: 0      // Z축 회전
-  };
+  // 초기 회전값 설정 (튀김 현상 방지)
+  useEffect(() => {
+    currentRotation.current = defaultRotation.y;
+    setTargetRotation(defaultRotation.y);
+  }, []);
 
-  // 더블클릭 핸들러
+  // 더블클릭 시 회전 방향 토글
   useEffect(() => {
     const handleDoubleClick = (e) => {
       e.preventDefault();
 
-      const additionalRotation = -Math.PI / 6; // 반시계 방향 30도
-      const currentY = rotateRef.current?.rotation.y || 0;
-      const nextY = currentY + additionalRotation;
+      const baseRotation = defaultRotation.y;
+      const newTarget = isAtDefault
+        ? baseRotation + ROTATION_AMOUNT
+        : baseRotation;
 
-      setTargetRotation(nextY);
+      setTargetRotation(newTarget);
       setIsRotating(true);
+      setIsAtDefault(!isAtDefault);
     };
 
     const canvas = gl.domElement;
@@ -46,7 +45,7 @@ const TurnModel = () => {
     return () => {
       canvas.removeEventListener('dblclick', handleDoubleClick);
     };
-  }, [gl]);
+  }, [gl, isAtDefault]);
 
   // 회전 애니메이션
   useFrame((_, delta) => {
@@ -77,10 +76,15 @@ const TurnModel = () => {
     if (scene) {
       scene.traverse((child) => {
         if (child.isMesh) {
-          child.material = new THREE.MeshStandardMaterial({
-            color: 0x888888,
-            metalness: 0.9,
+          child.material = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            metalness: 0.8,
             roughness: 0.2,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1,
+            envMapIntensity: 1.0,
+            ior: 1.5,
+            reflectivity: 0.8,
           });
         }
       });
@@ -88,7 +92,7 @@ const TurnModel = () => {
   }, [scene]);
 
   return (
-    <group 
+    <group
       ref={rotateRef}
       position={[defaultPosition.x, defaultPosition.y, defaultPosition.z]}
       rotation={[defaultRotation.x, defaultRotation.y, defaultRotation.z]}
