@@ -1,95 +1,169 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const Weather = ({ visible = true }) => {
+const Weather = ({ visible = true, onDragStart, onDragEnd, onDrop, selectedNumber = null }) => {
   const { scene } = useGLTF('/3d/mini-block/wea.glb');
-  const [position, setPosition] = useState([0, -1, -1.3]);
-  const [rotation, setRotation] = useState([0, Math.PI / 2, 0]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isRotating, setIsRotating] = useState(false);
-  const { camera, gl } = useThree();
-  const raycaster = new THREE.Raycaster();
+  const modelRef = useRef();
+  const [isDraggable, setIsDraggable] = useState(false);
+  const [isOnLP, setIsOnLP] = useState(false);
+  const { camera } = useThree();
   const mouse = new THREE.Vector2();
   const lastMouse = new THREE.Vector2();
+  const plane = new THREE.Plane();
+  const planeNormal = new THREE.Vector3();
+  const originalMaterials = useRef({});
+  const boundingBox = useRef(null);
+  const originalPosition = [0.7, -1, -1.3];
+  const lpPosition = [0.2, -0.36, 0.08];
+  const lpRadius = 1.35;
 
   useEffect(() => {
     if (scene) {
+      boundingBox.current = new THREE.Box3().setFromObject(scene);
+      
       scene.traverse((child) => {
         if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.frustumCulled = false;
           child.visible = visible;
+          child.renderOrder = 1;
+          originalMaterials.current[child.uuid] = child.material.clone();
+          child.geometry.computeBoundingBox();
+          child.geometry.boundingSphere = child.geometry.boundingBox.getBoundingSphere(new THREE.Sphere());
+          child.geometry.boundingSphere.radius *= 0.375;
         }
       });
     }
   }, [scene, visible]);
 
-  const handlePointerDown = (e) => {
+  const updateMaterials = (isRed) => {
+    if (!scene) return;
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        const originalMaterial = originalMaterials.current[child.uuid];
+        child.material = new THREE.MeshStandardMaterial({
+          color: isRed && !isOnLP ? new THREE.Color('#ff0000') : originalMaterial.color,
+          metalness: originalMaterial.metalness,
+          roughness: originalMaterial.roughness,
+          transparent: originalMaterial.transparent,
+          opacity: originalMaterial.opacity,
+        });
+      }
+    });
+  };
+
+  useEffect(() => {
+    updateMaterials(isDraggable);
+  }, [isDraggable, isOnLP, scene]);
+
+  const handlePointerEnter = (e) => {
     e.stopPropagation();
-    if (e.shiftKey) {
-      setIsRotating(true);
-    } else {
-      setIsDragging(true);
+    if (visible && !isOnLP && selectedNumber === 3) {
+      setIsDraggable(true);
+      document.body.style.cursor = 'grab';
     }
-    lastMouse.set(e.clientX, e.clientY);
   };
 
-  const handlePointerUp = () => {
-    setIsDragging(false);
-    setIsRotating(false);
+  const handlePointerLeave = (e) => {
+    e.stopPropagation();
+    if (!modelRef.current?.isDragging) {
+      setIsDraggable(false);
+      document.body.style.cursor = 'auto';
+    }
   };
 
-  const handlePointerMove = (e) => {
-    if (!isDragging && !isRotating) return;
+  const isOverLP = (position) => {
+    const dx = position.x - lpPosition[0];
+    const dz = position.z - lpPosition[2];
+    const distanceToLP = Math.sqrt(dx * dx + dz * dz);
+    return distanceToLP <= lpRadius;
+  };
 
-    const deltaX = e.clientX - lastMouse.x;
-    const deltaY = e.clientY - lastMouse.y;
+  const snapToLP = () => {
+    return {
+      x: lpPosition[0],
+      y: lpPosition[1] + 0.1,
+      z: lpPosition[2]
+    };
+  };
+
+  const handlePointerDown = (e) => {
+    if (selectedNumber !== 3 || isOnLP) return;
+    
+    e.stopPropagation();
+    modelRef.current.isDragging = true;
+    document.body.style.cursor = 'grabbing';
+    if (onDragStart) onDragStart();
     lastMouse.set(e.clientX, e.clientY);
 
-    if (isDragging) {
+    const handlePointerMove = (e) => {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
+      const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(mouse, camera);
+      camera.getWorldDirection(planeNormal);
+      plane.setFromNormalAndCoplanarPoint(planeNormal, modelRef.current.position);
 
-      const direction = new THREE.Vector3();
-      camera.getWorldDirection(direction);
+      const intersection = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, intersection);
+      modelRef.current.position.copy(intersection);
+    };
 
-      const distance = -camera.position.z;
-      const newPosition = new THREE.Vector3();
-      newPosition.copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, distance);
+    const handlePointerUp = () => {
+      modelRef.current.isDragging = false;
+      document.body.style.cursor = 'auto';
 
-      setPosition([newPosition.x, newPosition.y, newPosition.z]);
-    } else if (isRotating) {
-      const newRotation = [
-        rotation[0] + deltaY * 0.01,
-        rotation[1] + deltaX * 0.01,
-        rotation[2]
-      ];
-      setRotation(newRotation);
-    }
+      const droppedOnLP = isOverLP(modelRef.current.position);
+      if (droppedOnLP) {
+        const snapPosition = snapToLP();
+        modelRef.current.position.set(snapPosition.x, snapPosition.y, snapPosition.z);
+        setIsOnLP(true);
+      } else {
+        modelRef.current.position.set(...originalPosition);
+        setIsOnLP(false);
+      }
+
+      if (onDrop) {
+        onDrop(droppedOnLP);
+      }
+
+      if (onDragEnd) onDragEnd();
+      setIsDraggable(false);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
   };
 
-  React.useEffect(() => {
-    if (isDragging || isRotating) {
-      gl.domElement.addEventListener('pointermove', handlePointerMove);
-      gl.domElement.addEventListener('pointerup', handlePointerUp);
-    }
-
-    return () => {
-      gl.domElement.removeEventListener('pointermove', handlePointerMove);
-      gl.domElement.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [isDragging, isRotating]);
-
   return (
-    <primitive
-      object={scene}
-      position={[0.7, -1, -1.3]}
-      rotation={[0, Math.PI / 2, 0]}
-      scale={8}
-      onPointerDown={handlePointerDown}
-    />
+    <group>
+      <mesh
+        visible={false}
+        position={[originalPosition[0], originalPosition[1] + 0.2, originalPosition[2]]}
+        rotation={[0, Math.PI / 2, 0]}
+        scale={1}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onPointerDown={handlePointerDown}
+      >
+        <boxGeometry args={[2, 2, 2]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+      
+      <primitive
+        ref={modelRef}
+        object={scene}
+        position={originalPosition}
+        rotation={[0, Math.PI / 2, 0]}
+        scale={8}
+      />
+    </group>
   );
 };
 
