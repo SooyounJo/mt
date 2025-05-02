@@ -54,6 +54,7 @@ const RecoModel = () => {
           envMapIntensity: 1.0,
           ior: 1.5           // 굴절률
         });
+        
       } else if (originalMaterial.color.getHex() === 0xff0000) {
         mesh.material = new THREE.MeshStandardMaterial({
           color: 0xff0000,

@@ -67,7 +67,7 @@ const Light = () => {
       light.shadow.camera.far = 60;
 
       // ✅ 낮고 옆 방향에서 빛이 들어오도록 변경 (길게 그림자)
-      light.position.set(-12, 4, 6);
+      light.position.set(-10, 4, 6);
 
       // ✅ target 위치 조정 (중앙 바닥 쪽으로)
       if (light.target) {
@@ -91,7 +91,7 @@ const Light = () => {
 
       <directionalLight
         name="directionalLight"
-        position={[-12, 4, 6]}
+        position={[-8, 4, -5]}
         intensity={6}
         color="#ffffff"
         castShadow
