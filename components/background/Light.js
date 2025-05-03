@@ -56,8 +56,8 @@ const Light = () => {
       //조명 그림자 품질 강화
       light.castShadow = true;
       light.shadow.mapSize.set(4096, 4096); // 해상도 ↑
-      light.shadow.bias = -0.002;           // 더 진한 경계
-      light.shadow.normalBias = 0.15;       // 접촉 그림자 강조
+      light.shadow.bias = -0.003;           // 더 진한 경계
+      light.shadow.normalBias = 0.2;        // 더 강한 접촉 그림자
 
       //창문 그림자 길어지게
       light.shadow.camera.left = -20;
@@ -67,11 +67,12 @@ const Light = () => {
       light.shadow.camera.far = 60;
 
       // ✅ 낮고 옆 방향에서 빛이 들어오도록 변경 (길게 그림자)
-      light.position.set(-10, 4, 6);
+      light.position.set(-12, 5, 8);
+      light.intensity = 3.5;  // 조명 강도 증가
 
       // ✅ target 위치 조정 (중앙 바닥 쪽으로)
       if (light.target) {
-        light.target.position.set(0, 0, 0);
+        light.target.position.set(0, -1, 0);
         light.target.updateMatrixWorld();
       }
 
@@ -87,12 +88,12 @@ const Light = () => {
         background 
       />
 
-      <ambientLight intensity={0.001} />
+      <ambientLight intensity={0.2} />  // 주변광 강도 감소
 
       <directionalLight
         name="directionalLight"
-        position={[-8, 4, -5]}
-        intensity={6}
+        position={[-12, 5, 8]}
+        intensity={3.5}
         color="#ffffff"
         castShadow
         shadow-mapSize-width={4096}
@@ -102,17 +103,32 @@ const Light = () => {
         shadow-camera-right={20}
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
-        shadow-bias={-0.002}
+        shadow-bias={-0.003}
         shadow-radius={0}
-        shadow-normalBias={0.15}
+        shadow-normalBias={0.2}
       >
-        <object3D position={[0, 0, 0]} />
+        <object3D position={[0, -1, 0]} />
       </directionalLight>
 
-      <mesh position={[-12, 4, 6]}>
-        <sphereGeometry args={[0.2, 32, 32]} />
-        <meshBasicMaterial color="red" />
-      </mesh>
+      <spotLight
+        position={[-10, 4, -6]}
+        intensity={2.5}
+        angle={Math.PI / 5}
+        penumbra={0.4}
+        decay={2.5}
+        distance={25}
+        color="#ffffff"
+        castShadow
+      />
+
+      {/* 보조 조명 추가 - 반대편에서 약한 조명 */}
+      <pointLight
+        position={[8, 3, -4]}
+        intensity={0.3}
+        distance={15}
+        decay={2}
+        color="#ffffff"
+      />
     </>
   );
 };

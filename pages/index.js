@@ -11,6 +11,7 @@ import Weather from '../components/models/mini-block/Weather';
 import Place from '../components/models/mini-block/Place';
 import Model123 from '../components/models/mini-block/123';
 import Grid from '../components/system/Grid';
+import GridBall from '../components/system/GridBall';
 import Light from '../components/background/Light';
 import Control from '../components/system/Control';
 
@@ -53,7 +54,10 @@ export default function Home() {
           type: 'PCFSoftShadowMap',
           enabled: true
         }}
-        camera={{ position: [0, 5, 10], fov: 50 }}
+        camera={{ position: [10, 5, -12], fov: 50 }}
+        onCreated={({ camera }) => {
+          camera.lookAt(0, 0, -3);
+        }}
         gl={{ 
           antialias: true,
           alpha: true,
@@ -63,6 +67,7 @@ export default function Home() {
       >
         <Control isDragging={isDragging} />
         <Light />
+        <GridBall />
         
         <Background receiveShadow castShadow />
         <GridSystem receiveShadow />
