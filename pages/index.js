@@ -56,7 +56,7 @@ export default function Home() {
         }}
         camera={{ position: [10, 5, -12], fov: 50 }}
         onCreated={({ camera }) => {
-          camera.lookAt(0, 0, -3);
+          camera.lookAt(0, 0, -7);
         }}
         gl={{ 
           antialias: true,

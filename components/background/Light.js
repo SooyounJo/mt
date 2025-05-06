@@ -67,8 +67,8 @@ const Light = () => {
       light.shadow.camera.far = 60;
 
       // ✅ 낮고 옆 방향에서 빛이 들어오도록 변경 (길게 그림자)
-      light.position.set(-12, 5, 8);
-      light.intensity = 3.5;  // 조명 강도 증가
+      light.position.set(-7, 6, 6);
+      light.intensity = 4;  // 조명 강도 증가
 
       // ✅ target 위치 조정 (중앙 바닥 쪽으로)
       if (light.target) {
