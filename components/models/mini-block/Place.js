@@ -19,9 +19,9 @@ const defaultPositions = [
   [0.2, -1, -2.6],
 ];
 
-const lpPosition = [0.7, -0.06, 0.7]; // 우측 위
+const DEFAULT_LP_POSITION = [0.7, -0.06, 0.7]; // y축 0.3만 올라오게 수정
 
-export default function Place({ visible = true, positions }) {
+export default function Place({ visible = true, positions, lpPosition = DEFAULT_LP_POSITION }) {
   const posArr = positions && positions.length === files.length ? positions : defaultPositions;
   const [onLPIdx, setOnLPIdx] = useState(null);
   const modelRefs = useRef(files.map(() => React.createRef()));

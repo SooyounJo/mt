@@ -3,9 +3,9 @@ import { useGLTF } from '@react-three/drei';
 
 const files = ['wea.glb'];
 const defaultPositions = [[0.7, -1, -1.3]];
-const lpPosition = [-0.7, -0.06, -0.7]; // 좌측 아래
+const DEFAULT_LP_POSITION = [-0.7, -0.06, -0.7]; // y축 0.3만 올라오게 수정
 
-export default function Weather({ visible = true }) {
+export default function Weather({ visible = true, lpPosition = DEFAULT_LP_POSITION }) {
   const [onLPIdx, setOnLPIdx] = useState(null);
   const modelRefs = useRef(files.map(() => React.createRef()));
 

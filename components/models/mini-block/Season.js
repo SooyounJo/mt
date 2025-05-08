@@ -15,9 +15,9 @@ const defaultPositions = [
   [0.7, -1, -3],
 ];
 
-const lpPosition = [-0.7, -0.06, 0.7]; // 좌측 위
+const DEFAULT_LP_POSITION = [-0.7, -0.06, 0.7]; // y축 0.3만 올라오게 수정
 
-export default function Season({ visible = true }) {
+export default function Season({ visible = true, lpPosition = DEFAULT_LP_POSITION }) {
   // LP에 올라간 인덱스(그룹 내 단 하나만)
   const [onLPIdx, setOnLPIdx] = useState(null);
   const modelRefs = useRef(files.map(() => React.createRef()));
