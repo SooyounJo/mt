@@ -69,11 +69,11 @@ const Light = () => {
       light.shadow.camera.far = 50;
       light.shadow.camera.updateProjectionMatrix();
 
-      light.position.set(-7, 6, 6);
-      light.intensity = 4;
+      light.position.set(-15, 6, -6);
+      light.intensity = 5;
 
       if (light.target) {
-        light.target.position.set(0, -1, 0);
+        light.target.position.set(0, 1, 0);
         light.target.updateMatrixWorld();
       }
 
@@ -104,8 +104,8 @@ const Light = () => {
 
       <directionalLight
         name="directionalLight"
-        position={[-20, 6, 8]}
-        intensity={4}
+        position={[-12, 8, -10]}
+        intensity={3}
         color="white"
       >
         <object3D position={[0, -1, 0]} />
