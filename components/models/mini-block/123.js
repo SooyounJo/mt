@@ -32,7 +32,7 @@ const NumberBlock = ({ number, position, isActive, onClick }) => {
     >
       {number}
       <meshPhysicalMaterial
-        color={isHovered ? "#ff3333" : "#ffffff"}
+        color={isHovered ? "#ff6666" : "#ff9999"}
         metalness={0.1}
         roughness={0.1}
         transmission={0.9}

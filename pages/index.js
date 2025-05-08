@@ -21,6 +21,7 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [seasonOnLP, setSeasonOnLP] = useState(false);
   const [isGridVisible, setIsGridVisible] = useState(true);
+  const [activeGroup, setActiveGroup] = useState(null); // 'place' | 'season' | 'weather' | null
 
   const handlePointerMove = (event) => {
     if (event.intersects && event.intersects.length > 0) {
@@ -98,19 +99,26 @@ export default function Home() {
           receiveShadow 
           castShadow 
           visible={isSeasonVisible}
-          onDragStart={() => setIsDragging(true)}
-          onDragEnd={() => setIsDragging(false)}
+          onDragStart={() => { setIsDragging(true); setActiveGroup('season'); }}
+          onDragEnd={() => { setIsDragging(false); setActiveGroup(null); }}
           onDrop={handleSeasonDrop}
+          dragEnabled={activeGroup === 'season'}
         />
         <Weather 
           receiveShadow 
           castShadow 
           visible={isWeatherVisible}
+          dragEnabled={activeGroup === 'weather'}
+          onDragStart={() => { setIsDragging(true); setActiveGroup('weather'); }}
+          onDragEnd={() => { setIsDragging(false); setActiveGroup(null); }}
         />
         <Place 
           receiveShadow 
           castShadow 
           visible={isPlaceVisible}
+          dragEnabled={activeGroup === 'place'}
+          onDragStart={() => { setIsDragging(true); setActiveGroup('place'); }}
+          onDragEnd={() => { setIsDragging(false); setActiveGroup(null); }}
         />
         <Model123 
           receiveShadow 

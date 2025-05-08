@@ -3,7 +3,7 @@ import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const Weather = ({ visible = true, onDragStart, onDragEnd, onDrop, selectedNumber = null }) => {
+const Weather = ({ visible = true, onDragStart, onDragEnd, onDrop, selectedNumber = null, dragEnabled = true }) => {
   const { scene } = useGLTF('/3d/mini-block/wea.glb');
   const modelRef = useRef();
   const [isDraggable, setIsDraggable] = useState(false);
@@ -91,6 +91,7 @@ const Weather = ({ visible = true, onDragStart, onDragEnd, onDrop, selectedNumbe
   };
 
   const handlePointerDown = (e) => {
+    if (!dragEnabled) return;
     if (selectedNumber !== 3 || isOnLP) return;
     
     e.stopPropagation();
@@ -116,6 +117,7 @@ const Weather = ({ visible = true, onDragStart, onDragEnd, onDrop, selectedNumbe
     const handlePointerUp = () => {
       modelRef.current.isDragging = false;
       document.body.style.cursor = 'auto';
+      if (onDragEnd) onDragEnd();
 
       const droppedOnLP = isOverLP(modelRef.current.position);
       if (droppedOnLP) {
@@ -131,8 +133,6 @@ const Weather = ({ visible = true, onDragStart, onDragEnd, onDrop, selectedNumbe
         onDrop(droppedOnLP);
       }
 
-      if (onDragEnd) onDragEnd();
-      setIsDraggable(false);
       document.removeEventListener('pointermove', handlePointerMove);
       document.removeEventListener('pointerup', handlePointerUp);
     };
