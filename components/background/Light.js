@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Environment } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
@@ -49,86 +49,76 @@ const diagnoseShadowInteractions = (scene) => {
 
 const Light = () => {
   const { scene } = useThree();
+  const [showHelper, setShowHelper] = useState(true);
 
   useEffect(() => {
     const light = scene.getObjectByName('directionalLight');
     if (light && scene) {
       //조명 그림자 품질 강화
       light.castShadow = true;
-      light.shadow.mapSize.set(4096, 4096); // 해상도 ↑
-      light.shadow.bias = -0.003;           // 더 진한 경계
-      light.shadow.normalBias = 0.2;        // 더 강한 접촉 그림자
+      light.shadow.mapSize.set(2048, 2048);
+      light.shadow.bias = -0.001;
+      light.shadow.normalBias = 0.1;
 
-      //창문 그림자 길어지게
-      light.shadow.camera.left = -20;
-      light.shadow.camera.right = 20;
-      light.shadow.camera.top = 20;
-      light.shadow.camera.bottom = -20;
-      light.shadow.camera.far = 60;
+      // 그림자 카메라 설정
+      light.shadow.camera.left = -15;
+      light.shadow.camera.right = 15;
+      light.shadow.camera.top = 15;
+      light.shadow.camera.bottom = -15;
+      light.shadow.camera.near = 0.1;
+      light.shadow.camera.far = 50;
+      light.shadow.camera.updateProjectionMatrix();
 
-      // ✅ 낮고 옆 방향에서 빛이 들어오도록 변경 (길게 그림자)
       light.position.set(-7, 6, 6);
-      light.intensity = 4;  // 조명 강도 증가
+      light.intensity = 4;
 
-      // ✅ target 위치 조정 (중앙 바닥 쪽으로)
       if (light.target) {
         light.target.position.set(0, -1, 0);
         light.target.updateMatrixWorld();
       }
 
+      // 카메라 헬퍼 추가
+      const helper = new THREE.CameraHelper(light.shadow.camera);
+      helper.visible = showHelper;
+      scene.add(helper);
+
       // 그림자 상호작용 진단 실행
       diagnoseShadowInteractions(scene);
+
+      // 클린업 함수
+      return () => {
+        scene.remove(helper);
+      };
     }
-  }, [scene]);
+  }, [scene, showHelper]);
 
   return (
     <>
       <Environment 
         files="/3d/hdri/meadow.hdr" 
-        background 
+        background
+        intensity={0.3}
       />
 
-      <ambientLight intensity={0.2} />  // 주변광 강도 감소
+      <ambientLight intensity={0.3} />
 
       <directionalLight
         name="directionalLight"
-        position={[-12, 5, 8]}
-        intensity={3.5}
-        color="#ffffff"
-        castShadow
-        shadow-mapSize-width={4096}
-        shadow-mapSize-height={4096}
-        shadow-camera-far={60}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
-        shadow-bias={-0.003}
-        shadow-radius={0}
-        shadow-normalBias={0.2}
+        position={[-20, 6, 8]}
+        intensity={4}
+        color="white"
       >
         <object3D position={[0, -1, 0]} />
       </directionalLight>
 
-      <spotLight
-        position={[-10, 4, -6]}
-        intensity={2.5}
-        angle={Math.PI / 5}
-        penumbra={0.4}
-        decay={2.5}
-        distance={25}
-        color="#ffffff"
-        castShadow
-      />
-
-      {/* 보조 조명 추가 - 반대편에서 약한 조명 */}
-      <pointLight
-        position={[8, 3, -4]}
-        intensity={0.3}
-        distance={15}
-        decay={2}
-        color="#ffffff"
-      />
+      {/* 헬퍼 토글 버튼 */}
+      <mesh
+        position={[0, 0, -5]}
+        onClick={() => setShowHelper(!showHelper)}
+      >
+        <boxGeometry args={[0.2, 0.2, 0.2]} />
+        <meshBasicMaterial color="white" />
+      </mesh>
     </>
   );
 };

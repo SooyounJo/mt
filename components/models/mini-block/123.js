@@ -58,31 +58,39 @@ const Model123 = ({ onModelChange }) => {
       onModelChange('place');
     } else if (newActiveNumber === "3") {
       onModelChange('weather');
+    } else if (newActiveNumber === "4") {
+      onModelChange('place'); // 4번도 place 모델을 활성화하도록 설정
     } else {
       onModelChange(null);
     }
   };
 
   return (
-    <group position={[-0.6, -0.8, -2]} rotation={[0, Math.PI / 2, 0]} scale={0.875}>
+    <group position={[-0.8, -0.8, -2]} rotation={[0, Math.PI / 2, 0]} scale={0.875}>
       <Center>
         <NumberBlock 
           number="1" 
-          position={[-0.5, 0, 0]} 
+          position={[-0.7, 0, 0]} 
           isActive={activeNumber === "1"}
           onClick={() => handleClick("1")}
         />
         <NumberBlock 
           number="2" 
-          position={[0, 0, 0]} 
+          position={[-0.2, 0, 0]} 
           isActive={activeNumber === "2"}
           onClick={() => handleClick("2")}
         />
         <NumberBlock 
           number="3" 
-          position={[0.5, 0, 0]} 
+          position={[0.3, 0, 0]} 
           isActive={activeNumber === "3"}
           onClick={() => handleClick("3")}
+        />
+        <NumberBlock 
+          number="4" 
+          position={[0.8, 0, 0]} 
+          isActive={activeNumber === "4"}
+          onClick={() => handleClick("4")}
         />
       </Center>
     </group>

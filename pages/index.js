@@ -20,6 +20,7 @@ export default function Home() {
   const [activeModel, setActiveModel] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [seasonOnLP, setSeasonOnLP] = useState(false);
+  const [isGridVisible, setIsGridVisible] = useState(true);
 
   const handlePointerMove = (event) => {
     if (event.intersects && event.intersects.length > 0) {
@@ -47,6 +48,25 @@ export default function Home() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <Grid mousePosition={mousePosition} />
+      
+      <button
+        onClick={() => setIsGridVisible(!isGridVisible)}
+        style={{
+          position: 'absolute',
+          top: 20,
+          right: 20,
+          padding: '8px 16px',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          zIndex: 1000,
+          fontFamily: 'monospace'
+        }}
+      >
+        {isGridVisible ? '그리드 숨기기' : '그리드 보이기'}
+      </button>
 
       <Canvas 
         onPointerMove={handlePointerMove}
@@ -70,7 +90,7 @@ export default function Home() {
         <GridBall />
         
         <Background receiveShadow castShadow />
-        <GridSystem receiveShadow />
+        <GridSystem receiveShadow visible={isGridVisible} />
         <RecoModel receiveShadow castShadow />
         <LPModel receiveShadow castShadow />
         <TurnModel receiveShadow castShadow />

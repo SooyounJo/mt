@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid } from '@react-three/drei';
 
-const GridSystem = () => {
+const GridSystem = ({ visible = true }) => {
   return (
     <Grid
       args={[10, 10]}
@@ -15,6 +15,7 @@ const GridSystem = () => {
       fadeStrength={1}
       followCamera={false}
       infiniteGrid={true}
+      visible={visible}
     />
   );
 };
