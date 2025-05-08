@@ -15,45 +15,46 @@ const defaultPositions = [
   [0.7, -1, -3],
 ];
 
-// LP의 4곳 끝 좌표 (예시: 좌상, 우상, 좌하, 우하)
-const lpPositions = [
-  [-0.7, -0.06, 0.7],   // 좌상
-  [0.7, -0.06, 0.7],    // 우상
-  [-0.7, -0.06, -0.7],  // 좌하
-  [0.7, -0.06, -0.7],   // 우하
-];
+const lpPosition = [-0.7, -0.06, 0.7]; // 좌측 위
 
 export default function Season({ visible = true }) {
-  const [onLP, setOnLP] = useState(Array(files.length).fill(false));
+  // LP에 올라간 인덱스(그룹 내 단 하나만)
+  const [onLPIdx, setOnLPIdx] = useState(null);
   const modelRefs = useRef(files.map(() => React.createRef()));
 
   const handleClick = (idx) => {
-    setOnLP((prev) => prev.map((v, i) => (i === idx ? !v : v)));
-    if (modelRefs.current[idx].current) {
-      if (!onLP[idx]) {
-        modelRefs.current[idx].current.position.set(...lpPositions[idx]);
-      } else {
-        modelRefs.current[idx].current.position.set(...defaultPositions[idx]);
+    if (!visible) return;
+    setOnLPIdx(idx);
+    files.forEach((file, i) => {
+      if (modelRefs.current[i].current) {
+        if (i === idx) {
+          modelRefs.current[i].current.position.set(...lpPosition);
+        } else {
+          modelRefs.current[i].current.position.set(...defaultPositions[i]);
+        }
       }
-    }
+    });
   };
 
   return (
     <group>
       {files.map((file, idx) => {
         const { scene } = useGLTF(`/3d/mini-block/season/${file}`);
+        // LP에 올라간 요소는 항상 보임, 그 외는 visible prop에 따름
+        const isVisible = visible || onLPIdx === idx;
         return (
           <primitive
             key={file}
             ref={modelRefs.current[idx]}
             object={scene}
             scale={6}
-            visible={visible}
+            visible={isVisible}
             castShadow
             receiveShadow
             rotation={[0, Math.PI / 2, 0]}
-            position={onLP[idx] ? lpPositions[idx] : defaultPositions[idx]}
-            onClick={() => handleClick(idx)}
+            position={onLPIdx === idx ? lpPosition : defaultPositions[idx]}
+            onClick={isVisible ? () => handleClick(idx) : undefined}
+            style={isVisible ? { cursor: 'pointer' } : { pointerEvents: 'none' }}
           />
         );
       })}
