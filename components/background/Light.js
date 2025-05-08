@@ -95,18 +95,18 @@ const Light = () => {
   return (
     <>
       <Environment 
-        files="/3d/hdri/meadow.hdr" 
+        files="/3d/hdri/li_sky.exr" 
         background
-        intensity={0.3}
+        intensity={0.5}
       />
 
-      <ambientLight intensity={0.3} />
+      <ambientLight intensity={0.1} />
 
       <directionalLight
         name="directionalLight"
-        position={[-12, 8, -10]}
+        position={[-12, 7, -10]}
         intensity={3}
-        color="white"
+        color="#fff4e6"
       >
         <object3D position={[0, -1, 0]} />
       </directionalLight>
@@ -117,7 +117,7 @@ const Light = () => {
         onClick={() => setShowHelper(!showHelper)}
       >
         <boxGeometry args={[0.2, 0.2, 0.2]} />
-        <meshBasicMaterial color="white" />
+        <meshBasicMaterial color="#fff4e6" />
       </mesh>
     </>
   );
