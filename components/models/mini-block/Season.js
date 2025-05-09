@@ -15,7 +15,7 @@ const defaultPositions = [
   [0.7, -1, -3],
 ];
 
-const DEFAULT_LP_POSITION = [-0.7, -0.06, 0.7]; // y축 0.3만 올라오게 수정
+const DEFAULT_LP_POSITION = [-0.7, -0.26, 0.7]; // LP 위에 올라간 요소만 y -0.26
 
 export default function Season({ visible = true, lpPosition = DEFAULT_LP_POSITION }) {
   // LP에 올라간 인덱스(그룹 내 단 하나만)
@@ -47,7 +47,7 @@ export default function Season({ visible = true, lpPosition = DEFAULT_LP_POSITIO
             key={file}
             ref={modelRefs.current[idx]}
             object={scene}
-            scale={6}
+            scale={onLPIdx === idx ? 6 * 0.8 : 6}
             visible={isVisible}
             castShadow
             receiveShadow

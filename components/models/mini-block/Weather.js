@@ -3,7 +3,7 @@ import { useGLTF } from '@react-three/drei';
 
 const files = ['wea.glb'];
 const defaultPositions = [[0.7, -1, -1.3]];
-const DEFAULT_LP_POSITION = [-0.7, -0.06, -0.7]; // y축 0.3만 올라오게 수정
+const DEFAULT_LP_POSITION = [-0.3, -0.26, -0.3]; // 중심 기준 0.3 거리 좌측 아래
 
 export default function Weather({ visible = true, lpPosition = DEFAULT_LP_POSITION }) {
   const [onLPIdx, setOnLPIdx] = useState(null);
@@ -35,7 +35,7 @@ export default function Weather({ visible = true, lpPosition = DEFAULT_LP_POSITI
             object={scene}
             position={onLPIdx === idx ? lpPosition : defaultPositions[idx]}
             rotation={[0, Math.PI / 2, 0]}
-            scale={8}
+            scale={onLPIdx === idx ? 8 * 0.8 : 8}
             visible={isVisible}
             castShadow
             receiveShadow

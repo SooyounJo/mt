@@ -19,7 +19,7 @@ const defaultPositions = [
   [0.2, -1, -2.6],
 ];
 
-const DEFAULT_LP_POSITION = [0.7, -0.06, 0.7]; // y축 0.3만 올라오게 수정
+const DEFAULT_LP_POSITION = [0.3, -0.26, 0.3]; // 중심 기준 0.3 거리 우측 위
 
 export default function Place({ visible = true, positions, lpPosition = DEFAULT_LP_POSITION }) {
   const posArr = positions && positions.length === files.length ? positions : defaultPositions;
@@ -50,11 +50,11 @@ export default function Place({ visible = true, positions, lpPosition = DEFAULT_
             key={file}
             ref={modelRefs.current[idx]}
             object={scene}
-            scale={8}
+            scale={onLPIdx === idx ? 8 * 0.8 : 8}
             visible={isVisible}
             castShadow
             receiveShadow
-            rotation={[0, Math.PI / 2, 0]}
+            rotation={[0, 0, 0]}
             position={onLPIdx === idx ? lpPosition : posArr[idx]}
             onClick={isVisible ? () => handleClick(idx) : undefined}
             style={isVisible ? { cursor: 'pointer' } : { pointerEvents: 'none' }}

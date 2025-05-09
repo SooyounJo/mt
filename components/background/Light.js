@@ -97,18 +97,23 @@ const Light = () => {
       <Environment 
         files="/3d/hdri/li_sky.exr" 
         background
-        intensity={0.5}
+        intensity={0.07}
       />
 
-      <ambientLight intensity={0.1} />
+      <ambientLight intensity={0.08} />
 
       <directionalLight
         name="directionalLight"
-        position={[-12, 7, -10]}
-        intensity={3}
+        position={[-8, 8, -8]}
+        intensity={4.5}
         color="#fff4e6"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-bias={-0.001}
+        shadow-normalBias={0.1}
       >
-        <object3D position={[0, -1, 0]} />
+        <object3D position={[0, 0, 0]} />
       </directionalLight>
 
       {/* 헬퍼 토글 버튼 */}
