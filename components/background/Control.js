@@ -15,7 +15,7 @@ export default function Control({ enablePan = true, enableZoom = true, enableRot
   const [distance, setDistance] = useState(6); 
 
  
-  const target = [1.5, 1, -4];
+  const target = [1.5, 1, -4 - 3];
 
   useEffect(() => {
     
