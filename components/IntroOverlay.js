@@ -18,10 +18,10 @@ export default function IntroOverlay({ onSubmit }) {
       left: 0,
       width: '100vw',
       height: '100vh',
-      background: 'rgba(0,0,0,0.55)',
+      background: 'rgba(0,0,0,0.25)',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
       zIndex: 2000
     }}>
       <form onSubmit={handleSubmit} style={{
@@ -32,7 +32,8 @@ export default function IntroOverlay({ onSubmit }) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minWidth: 320
+        minWidth: 320,
+        marginLeft: '8vw'
       }}>
         <h2 style={{marginBottom: 24, color: '#111'}}>여행을 시작합니다</h2>
         <label style={{marginBottom: 12, width: '100%', color: '#111'}}>

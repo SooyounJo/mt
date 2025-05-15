@@ -51,8 +51,8 @@ const LPModel = ({ travelText }) => {
       </group>
       {travelText && (
         <Text
-          position={[0.8, -0.3, -0.2]} // LP 위에 살짝 띄움
-          fontSize={0.35}
+          position={[0.8, -0.3, -0.1]} // LP 위에 살짝 띄움
+          fontSize={0.25}
           color="#fff"
           anchorX="center"
           anchorY="middle"
@@ -66,7 +66,7 @@ const LPModel = ({ travelText }) => {
           }}
           rotation={[0, Math.PI / 2, 0]}
         >
-          {travelText}
+          {travelText.charAt(0).toUpperCase() + travelText.slice(1)}
         </Text>
       )}
     </group>
