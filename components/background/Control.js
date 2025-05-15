@@ -2,22 +2,25 @@ import { useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useEffect, useRef, useState } from 'react';
 
+
+const IS_TESTING = false;
+
 export default function Control({ enablePan = true, enableZoom = true, enableRotate = true }) {
   const { camera, gl } = useThree();
   const controlsRef = useRef();
 
   // 각도(도), 높이, 거리 상태 추가
-  const [angle, setAngle] = useState(90); // y축 기준 각도(도)
-  const [height, setHeight] = useState(7); // y축 높이
-  const [distance, setDistance] = useState(6); // target과의 거리
+  const [angle, setAngle] = useState(90);
+  const [height, setHeight] = useState(7); 
+  const [distance, setDistance] = useState(6); 
 
-  // 타겟 고정
+ 
   const target = [1.5, 1, -4];
 
   useEffect(() => {
-    // 각도를 라디안으로 변환
+    
     const rad = (angle * Math.PI) / 180;
-    // target 기준 원형 궤도 위에 카메라 위치 계산
+   
     const x = target[0] + distance * Math.cos(rad);
     const z = target[2] + distance * Math.sin(rad);
     camera.position.set(x, height, z);
@@ -30,7 +33,7 @@ export default function Control({ enablePan = true, enableZoom = true, enableRot
     }
   }, [camera, angle, height, distance]);
 
-  // UI: 각도/높이/거리 슬라이더
+
   return (
     <>
       <div style={{
@@ -67,6 +70,8 @@ export default function Control({ enablePan = true, enableZoom = true, enableRot
         maxDistance={40}
         rotateSpeed={0.5}
         dampingFactor={0.05}
+
+        //enabled={IS_TESTING}
       />
     </>
   );

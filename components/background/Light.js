@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import * as THREE from 'three';
 import { Environment } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
@@ -49,7 +49,6 @@ const diagnoseShadowInteractions = (scene) => {
 
 const Light = () => {
   const { scene } = useThree();
-  const [showHelper, setShowHelper] = useState(true);
 
   useEffect(() => {
     const light = scene.getObjectByName('directionalLight');
@@ -77,25 +76,15 @@ const Light = () => {
         light.target.updateMatrixWorld();
       }
 
-      // 카메라 헬퍼 추가
-      const helper = new THREE.CameraHelper(light.shadow.camera);
-      helper.visible = showHelper;
-      scene.add(helper);
-
       // 그림자 상호작용 진단 실행
       diagnoseShadowInteractions(scene);
-
-      // 클린업 함수
-      return () => {
-        scene.remove(helper);
-      };
     }
-  }, [scene, showHelper]);
+  }, [scene]);
 
   return (
     <>
       <Environment 
-        files="/3d/hdri/li_sky.exr" 
+        files="/3d/hdri/meadow.hdr" 
         background
         intensity={0.07}
       />
@@ -115,15 +104,6 @@ const Light = () => {
       >
         <object3D position={[0, 0, 0]} />
       </directionalLight>
-
-      {/* 헬퍼 토글 버튼 */}
-      <mesh
-        position={[0, 0, -5]}
-        onClick={() => setShowHelper(!showHelper)}
-      >
-        <boxGeometry args={[0.2, 0.2, 0.2]} />
-        <meshBasicMaterial color="#fff4e6" />
-      </mesh>
     </>
   );
 };

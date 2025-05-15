@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 
 const Background = () => {
-  const { scene } = useGLTF('/3d/background/backg.glb');
+  const { scene } = useGLTF('/3d/background/full3.glb');
 
   useEffect(() => {
     scene.traverse((child) => {

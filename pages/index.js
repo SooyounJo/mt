@@ -6,10 +6,6 @@ import RecoModel from '../components/models/recode/RecoModel';
 import LPModel from '../components/models/recode/LPModel';
 import TurnModel from '../components/models/recode/TurnModel';
 import Background from '../components/background/Background';
-import Season from '../components/models/mini-block/Season';
-import Weather from '../components/models/mini-block/Weather';
-import Place from '../components/models/mini-block/Place';
-import Model123 from '../components/models/mini-block/123';
 import Grid from '../components/system/Grid';
 import GridBall from '../components/system/GridBall';
 import Light from '../components/background/Light';
@@ -91,36 +87,6 @@ export default function Home() {
         <RecoModel receiveShadow castShadow />
         <LPModel receiveShadow castShadow />
         <TurnModel receiveShadow castShadow />
-        <Season 
-          receiveShadow 
-          castShadow 
-          visible={isSeasonVisible}
-          onDragStart={() => { setIsDragging(true); setActiveGroup('season'); }}
-          onDragEnd={() => { setIsDragging(false); setActiveGroup(null); }}
-          onDrop={handleSeasonDrop}
-          dragEnabled={activeGroup === 'season'}
-        />
-        <Weather 
-          receiveShadow 
-          castShadow 
-          visible={isWeatherVisible}
-          dragEnabled={activeGroup === 'weather'}
-          onDragStart={() => { setIsDragging(true); setActiveGroup('weather'); }}
-          onDragEnd={() => { setIsDragging(false); setActiveGroup(null); }}
-        />
-        <Place 
-          receiveShadow 
-          castShadow 
-          visible={isPlaceVisible}
-          dragEnabled={activeGroup === 'place'}
-          onDragStart={() => { setIsDragging(true); setActiveGroup('place'); }}
-          onDragEnd={() => { setIsDragging(false); setActiveGroup(null); }}
-        />
-        <Model123 
-          receiveShadow 
-          castShadow 
-          onModelChange={handleModelChange}
-        />
       </Canvas>
     </div>
   );
