@@ -1,78 +1,66 @@
-import { useThree } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
-
-const IS_TESTING = false;
-
-export default function Control({ enablePan = true, enableZoom = true, enableRotate = true }) {
+function Scene() {
   const { camera, gl } = useThree();
   const controlsRef = useRef();
 
-  // 각도(도), 높이, 거리 상태 추가
-  const [angle, setAngle] = useState(90);
-  const [height, setHeight] = useState(7); 
-  const [distance, setDistance] = useState(6); 
-
- 
-  const target = [1.5, 1, -4 - 3];
-
   useEffect(() => {
-    
-    const rad = (angle * Math.PI) / 180;
-   
-    const x = target[0] + distance * Math.cos(rad);
-    const z = target[2] + distance * Math.sin(rad);
-    camera.position.set(x, height, z);
-    camera.fov = 15;
-    camera.lookAt(...target);
+    // 카메라 초기 위치 설정
+    camera.position.set(-30, 7, 0);
+    camera.fov = 8;
     camera.updateProjectionMatrix();
+
+    // OrbitControls 초기 타겟 설정
     if (controlsRef.current) {
-      controlsRef.current.target.set(...target);
+      controlsRef.current.target.set(0, 1, 0);
       controlsRef.current.update();
     }
-  }, [camera, angle, height, distance]);
-
+  }, []);
 
   return (
     <>
-      <div style={{
-        position: 'absolute',
-        top: 20,
-        left: 20,
-        zIndex: 1001,
-        background: 'rgba(255,255,255,0.85)',
-        padding: '12px 16px',
-        borderRadius: '8px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        fontSize: 14
-      }}>
-        <div>
-          <label>Y축 각도: {angle}°</label>
-          <input type="range" min="0" max="360" value={angle} onChange={e => setAngle(Number(e.target.value))} />
-        </div>
-        <div>
-          <label>높이(y): {height}</label>
-          <input type="range" min="3" max="12" step="0.1" value={height} onChange={e => setHeight(Number(e.target.value))} />
-        </div>
-        <div>
-          <label>거리: {distance}</label>
-          <input type="range" min="3" max="15" step="0.1" value={distance} onChange={e => setDistance(Number(e.target.value))} />
-        </div>
-      </div>
       <OrbitControls
         ref={controlsRef}
-        args={[camera, gl.domElement]}
-        enablePan={enablePan}
-        enableZoom={enableZoom}
-        enableRotate={enableRotate}
+        enableDamping={true}
+        dampingFactor={0.05}
+        rotateSpeed={0.5}
         minDistance={2}
         maxDistance={40}
-        rotateSpeed={0.5}
-        dampingFactor={0.05}
-
-        //enabled={IS_TESTING}
+        enabled={!isDragging}
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        minPolarAngle={Math.PI / 4}
+        maxPolarAngle={Math.PI / 2}
       />
+      <mesh position={[0, 1, 0]}>
+        <boxGeometry args={[2, 2, 2]} />
+        <meshStandardMaterial color="orange" />
+      </mesh>
     </>
   );
 }
+
+export default function App() {
+  return (
+    <Canvas 
+      camera={{ 
+        position: [-30, 7, 0], 
+        fov: 8,
+        near: 0.1,
+        far: 1000
+      }}
+      onCreated={({ camera }) => {
+        camera.updateProjectionMatrix();
+      }}
+    >
+      <ambientLight />
+      <pointLight position={[10, 10, 10]} />
+      <Scene />
+    </Canvas>
+  );
+}
+
+

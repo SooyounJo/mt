@@ -1,9 +1,9 @@
 import React, { useRef, useEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const LPModel = () => {
+const LPModel = ({ travelText }) => {
   const { scene } = useGLTF('/3d/recode/lp5.glb');
   const groupRef = useRef();
 
@@ -49,6 +49,26 @@ const LPModel = () => {
       <group ref={groupRef}>
         <primitive object={scene} scale={2.7} />
       </group>
+      {travelText && (
+        <Text
+          position={[0.8, -0.3, -0.2]} // LP 위에 살짝 띄움
+          fontSize={0.35}
+          color="#fff"
+          anchorX="center"
+          anchorY="middle"
+          outlineColor="#fff"
+          outlineWidth={0.02}
+          castShadow
+          receiveShadow
+          materialProps={{
+            emissive: '#fff',
+            emissiveIntensity: 1.5,
+          }}
+          rotation={[0, Math.PI / 2, 0]}
+        >
+          {travelText}
+        </Text>
+      )}
     </group>
   );
 };

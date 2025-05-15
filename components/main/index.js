@@ -23,33 +23,6 @@ import {
   SocialLink
 } from './styles';
 
-// 프로젝트 데이터
-const projects = [
-  {
-    title: "Basic Line Series",
-    description: "A line of essential daily products with minimal design.",
-    tags: ["Product Design", "Lifestyle", "Minimal"],
-    image: "/fort1.png"
-  },
-  {
-    title: "Monochrome Collection",
-    description: "Simple furniture collection utilizing black and white contrast.",
-    tags: ["Furniture Design", "Monochrome", "Interior"],
-    image: "/fort2.png"
-  },
-  {
-    title: "Essential Kitchenware",
-    description: "Kitchen utensil series focused on essential functions, removing unnecessary elements.",
-    tags: ["Kitchenware", "Functionality", "Simple"],
-    image: "/fort3.png"
-  },
-  {
-    title: "Minimum Office",
-    description: "Office product design considering efficiency and aesthetics of the workspace.",
-    tags: ["Office", "Desk", "Productivity"],
-    image: "/fort1.png"
-  }
-];
 
 const MainComponent = () => {
   return (
@@ -93,18 +66,9 @@ const MainComponent = () => {
 
       <ContactSection id="contact">
         <ContactTitle>Contact</ContactTitle>
-        <ContactText>
-          For project inquiries or collaboration proposals, please email us.
-          We bring your vision to life with simple and functional design.
-        </ContactText>
         <ContactLink href="mailto:design@minimal.com">
           design@minimal.com
         </ContactLink>
-        <SocialLinksContainer>
-          <SocialLink href="#" aria-label="Instagram">Instagram</SocialLink>
-          <SocialLink href="#" aria-label="LinkedIn">LinkedIn</SocialLink>
-          <SocialLink href="#" aria-label="Behance">Behance</SocialLink>
-        </SocialLinksContainer>
       </ContactSection>
     </>
   );
