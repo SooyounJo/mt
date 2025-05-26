@@ -1,5 +1,5 @@
-import React from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useState } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Html, arrowHelper, Text3D, Environment } from '@react-three/drei';
 import Link from 'next/link';
 import { TextureLoader } from 'three';
@@ -45,7 +45,7 @@ function MemoryToneText() {
     <Text3D
       font="/font/coop.json"
       size={2.5}
-      height={0.4}
+      height={0.1}
       curveSegments={16}
       bevelEnabled
       bevelThickness={0.08}
@@ -75,6 +75,30 @@ function BackgroundPlane({ url = "/2d/plane.png" }) {
 }
 
 export default function Test() {
+  const [isOrbitEnabled, setIsOrbitEnabled] = useState(true);
+  const [fixedCamera, setFixedCamera] = useState(null); // null, 1, 2, 3
+
+  // 고정 카메라 시점 컴포넌트
+  function FixedCameraView({ view }) {
+    const { camera } = useThree();
+    useFrame(() => {
+      if (view === 1) {
+        camera.position.set(40, 10, 55);
+        camera.lookAt(4, -3, 0);
+        camera.updateProjectionMatrix();
+      } else if (view === 2) {
+        camera.position.set(5, 24, 60);
+        camera.lookAt(5, -7, 0);
+        camera.updateProjectionMatrix();
+      } else if (view === 3) {
+        camera.position.set(0, 7, 20);
+        camera.lookAt(0, -7, 7);
+        camera.updateProjectionMatrix();
+      }
+    });
+    return null;
+  }
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <div style={{
@@ -101,7 +125,64 @@ export default function Test() {
           </button>
         </Link>
       </div>
-      <Canvas camera={{ position: [0, -3, 10], fov: 35 }} shadows>
+      {/* 우측 상단 OrbitControls 토글 + 카메라 시점 버튼 */}
+      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 1000, display: 'flex', gap: 8 }}>
+        <button
+          onClick={() => setIsOrbitEnabled((prev) => !prev)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: isOrbitEnabled ? '#222' : '#888',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+          }}
+        >
+          {isOrbitEnabled ? '뷰 고정' : '뷰 해제'}
+        </button>
+        <button
+          onClick={() => { setFixedCamera(1); setIsOrbitEnabled(false); }}
+          style={{
+            padding: '8px 14px',
+            backgroundColor: fixedCamera === 1 ? '#ffe066' : '#222',
+            color: fixedCamera === 1 ? '#222' : '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontFamily: 'monospace',
+          }}
+        >1</button>
+        <button
+          onClick={() => { setFixedCamera(2); setIsOrbitEnabled(false); }}
+          style={{
+            padding: '8px 14px',
+            backgroundColor: fixedCamera === 2 ? '#ffe066' : '#222',
+            color: fixedCamera === 2 ? '#222' : '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontFamily: 'monospace',
+          }}
+        >2</button>
+        <button
+          onClick={() => { setFixedCamera(3); setIsOrbitEnabled(false); }}
+          style={{
+            padding: '8px 14px',
+            backgroundColor: fixedCamera === 3 ? '#ffe066' : '#222',
+            color: fixedCamera === 3 ? '#222' : '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontFamily: 'monospace',
+          }}
+        >3</button>
+      </div>
+      <Canvas camera={{ position: [6, 0, 15], fov: 35 }} shadows>
         <ambientLight intensity={2.0} />
         <directionalLight position={[5, 10, 7]} intensity={4.0} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
         <BackgroundPlane url="/2d/night3.jpg" />
@@ -133,7 +214,10 @@ export default function Test() {
           );
         })}
         <FullTestModel />
-        <OrbitControls />
+        {/* 올빗 컨트롤은 고정 카메라가 아닐 때만 활성화 */}
+        {(!fixedCamera) && <OrbitControls enabled={isOrbitEnabled} enableZoom={isOrbitEnabled} enablePan={isOrbitEnabled} />}
+        {/* 고정 카메라 시점 */}
+        {fixedCamera && <FixedCameraView view={fixedCamera} />}
       </Canvas>
     </div>
   );

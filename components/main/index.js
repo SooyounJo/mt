@@ -22,6 +22,7 @@ import {
   SocialLinksContainer,
   SocialLink
 } from './styles';
+import { Canvas } from '@react-three/fiber';
 
 
 const MainComponent = () => {
@@ -70,6 +71,9 @@ const MainComponent = () => {
           design@minimal.com
         </ContactLink>
       </ContactSection>
+
+      <Canvas camera={{ position: [6, 0, 25], fov: 35 }} shadows>
+      </Canvas>
     </>
   );
 };
