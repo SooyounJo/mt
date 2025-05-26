@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Html, arrowHelper, Text3D, Environment } from '@react-three/drei';
 import Link from 'next/link';
@@ -77,11 +77,54 @@ function BackgroundPlane({ url = "/2d/plane.png" }) {
 export default function Test() {
   const [isOrbitEnabled, setIsOrbitEnabled] = useState(true);
   const [fixedCamera, setFixedCamera] = useState(null); // null, 1, 2, 3
+  const animatingCamera = useRef(false);
+  const animationProgress = useRef(0);
+  const animationDuration = 1.5; // 초 단위
+  const cameraFrom = useRef({ position: [0,0,0], target: [0,0,0] });
+  const cameraTo = useRef({ position: [0,0,0], target: [0,0,0] });
 
-  // 고정 카메라 시점 컴포넌트
+  // 카메라 애니메이션 함수 (1초 대기 후 실행)
+  function animateCamera(from, to) {
+    cameraFrom.current = from;
+    cameraTo.current = to;
+    animationProgress.current = 0;
+    setFixedCamera(1); // 1번 시점으로 먼저 고정
+    setIsOrbitEnabled(false);
+    setTimeout(() => {
+      animatingCamera.current = true;
+      setFixedCamera(null); // OrbitControls도 비활성화
+    }, 1000);
+  }
+
+  // 고정 카메라 시점 컴포넌트 + 애니메이션
   function FixedCameraView({ view }) {
     const { camera } = useThree();
-    useFrame(() => {
+    useFrame((_, delta) => {
+      if (animatingCamera.current) {
+        animationProgress.current += delta / animationDuration;
+        const t = Math.min(animationProgress.current, 1);
+        // position lerp
+        const fromPos = cameraFrom.current.position;
+        const toPos = cameraTo.current.position;
+        camera.position.set(
+          fromPos[0] + (toPos[0] - fromPos[0]) * t,
+          fromPos[1] + (toPos[1] - fromPos[1]) * t,
+          fromPos[2] + (toPos[2] - fromPos[2]) * t
+        );
+        // target lerp
+        const fromTarget = cameraFrom.current.target;
+        const toTarget = cameraTo.current.target;
+        const lookX = fromTarget[0] + (toTarget[0] - fromTarget[0]) * t;
+        const lookY = fromTarget[1] + (toTarget[1] - fromTarget[1]) * t;
+        const lookZ = fromTarget[2] + (toTarget[2] - fromTarget[2]) * t;
+        camera.lookAt(lookX, lookY, lookZ);
+        camera.updateProjectionMatrix();
+        if (t >= 1) {
+          animatingCamera.current = false;
+          setFixedCamera(3); // 애니메이션 끝나면 3번 카메라로 고정
+        }
+        return;
+      }
       if (view === 1) {
         camera.position.set(40, 10, 55);
         camera.lookAt(4, -3, 0);
@@ -181,6 +224,23 @@ export default function Test() {
             fontFamily: 'monospace',
           }}
         >3</button>
+        {/* 뷰 변경 애니메이션 버튼 */}
+        <button
+          onClick={() => animateCamera(
+            { position: [40, 10, 55], target: [4, -3, 0] }, // 1번
+            { position: [0, 7, 20], target: [0, -7, 7] }   // 3번
+          )}
+          style={{
+            padding: '8px 14px',
+            backgroundColor: '#ffe066',
+            color: '#222',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontFamily: 'monospace',
+          }}
+        >뷰 변경</button>
       </div>
       <Canvas camera={{ position: [6, 0, 15], fov: 35 }} shadows>
         <ambientLight intensity={2.0} />
@@ -218,6 +278,8 @@ export default function Test() {
         {(!fixedCamera) && <OrbitControls enabled={isOrbitEnabled} enableZoom={isOrbitEnabled} enablePan={isOrbitEnabled} />}
         {/* 고정 카메라 시점 */}
         {fixedCamera && <FixedCameraView view={fixedCamera} />}
+        {/* 카메라 애니메이션만 동작할 때도 FixedCameraView 필요 */}
+        {(!fixedCamera && animatingCamera.current) && <FixedCameraView />}
       </Canvas>
     </div>
   );
