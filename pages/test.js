@@ -3,6 +3,8 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Html, arrowHelper, Text3D, Environment } from '@react-three/drei';
 import Link from 'next/link';
 import { TextureLoader } from 'three';
+import * as THREE from 'three';
+import { useRouter } from 'next/router';
 
 function FullTestModel() {
   const { scene } = useGLTF('/3d/background/full_test.glb');
@@ -21,24 +23,6 @@ function FullTestModel() {
 const pointLights = [
   { position: [6.5, -1.7, 8], intensity: 50.0, distance: 40, target: [0, -1, 0] },
 ];
-
-function PointLightMarker({ position, direction = [0, -1, 0] }) {
-  return (
-    <group position={position}>
-      <mesh>
-        <sphereGeometry args={[0.6, 32, 32]} />
-        <meshStandardMaterial color="#ffe066" emissive="#ffe066" emissiveIntensity={1.2} />
-      </mesh>
-      {/* 공 옆(오른쪽)에 방향 화살표 */}
-      <group position={[1, 0, 0]}>
-        <arrowHelper args={[direction, [0, 0, 0], 2, '#ffe066', 0.5, 0.3]} />
-      </group>
-      <Html position={[0, 1.1, 0]} style={{ color: 'white', fontWeight: 'bold', fontSize: '16px', textShadow: '0 0 4px #000' }}>
-        {`(${position[0]}, ${position[1]}, ${position[2]})`}
-      </Html>
-    </group>
-  );
-}
 
 function MemoryToneText() {
   return (
@@ -75,11 +59,13 @@ function BackgroundPlane({ url = "/2d/plane.png" }) {
 }
 
 export default function Test() {
+  const router = useRouter();
+  const { destination } = router.query;
   const [isOrbitEnabled, setIsOrbitEnabled] = useState(true);
   const [fixedCamera, setFixedCamera] = useState(null); // null, 1, 2, 3
   const animatingCamera = useRef(false);
   const animationProgress = useRef(0);
-  const animationDuration = 1.5; // 초 단위
+  const animationDuration = 2.2; // 초 단위, 더 느리게
   const cameraFrom = useRef({ position: [0,0,0], target: [0,0,0] });
   const cameraTo = useRef({ position: [0,0,0], target: [0,0,0] });
 
@@ -103,23 +89,25 @@ export default function Test() {
       if (animatingCamera.current) {
         animationProgress.current += delta / animationDuration;
         const t = Math.min(animationProgress.current, 1);
-        // position lerp
+        // position damp
         const fromPos = cameraFrom.current.position;
         const toPos = cameraTo.current.position;
-        camera.position.set(
-          fromPos[0] + (toPos[0] - fromPos[0]) * t,
-          fromPos[1] + (toPos[1] - fromPos[1]) * t,
-          fromPos[2] + (toPos[2] - fromPos[2]) * t
-        );
-        // target lerp
+        camera.position.x = THREE.MathUtils.damp(camera.position.x, fromPos[0] + (toPos[0] - fromPos[0]), 2, delta);
+        camera.position.y = THREE.MathUtils.damp(camera.position.y, fromPos[1] + (toPos[1] - fromPos[1]), 2, delta);
+        camera.position.z = THREE.MathUtils.damp(camera.position.z, fromPos[2] + (toPos[2] - fromPos[2]), 2, delta);
+        // target damp
         const fromTarget = cameraFrom.current.target;
         const toTarget = cameraTo.current.target;
-        const lookX = fromTarget[0] + (toTarget[0] - fromTarget[0]) * t;
-        const lookY = fromTarget[1] + (toTarget[1] - fromTarget[1]) * t;
-        const lookZ = fromTarget[2] + (toTarget[2] - fromTarget[2]) * t;
+        const lookX = THREE.MathUtils.damp(camera._lookX || fromTarget[0], fromTarget[0] + (toTarget[0] - fromTarget[0]), 2, delta);
+        const lookY = THREE.MathUtils.damp(camera._lookY || fromTarget[1], fromTarget[1] + (toTarget[1] - fromTarget[1]), 2, delta);
+        const lookZ = THREE.MathUtils.damp(camera._lookZ || fromTarget[2], fromTarget[2] + (toTarget[2] - fromTarget[2]), 2, delta);
         camera.lookAt(lookX, lookY, lookZ);
+        camera._lookX = lookX; camera._lookY = lookY; camera._lookZ = lookZ;
         camera.updateProjectionMatrix();
-        if (t >= 1) {
+        if (t >= 1 &&
+          Math.abs(camera.position.x - (fromPos[0] + (toPos[0] - fromPos[0]))) < 0.01 &&
+          Math.abs(camera.position.y - (fromPos[1] + (toPos[1] - fromPos[1]))) < 0.01 &&
+          Math.abs(camera.position.z - (fromPos[2] + (toPos[2] - fromPos[2]))) < 0.01) {
           animatingCamera.current = false;
           setFixedCamera(3); // 애니메이션 끝나면 3번 카메라로 고정
         }
@@ -269,7 +257,6 @@ export default function Test() {
                 castShadow
                 target-position={light.target}
               />
-              <PointLightMarker position={light.position} direction={normDir} />
             </>
           );
         })}
