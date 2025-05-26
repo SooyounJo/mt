@@ -1,3 +1,10 @@
+import React from 'react';
+import { EffectComposer, SMAA } from '@react-three/postprocessing';
+
 export default function Filter() {
-  return null;
+  return (
+    <EffectComposer>
+      <SMAA />
+    </EffectComposer>
+  );
 } 

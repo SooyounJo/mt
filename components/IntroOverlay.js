@@ -18,7 +18,7 @@ export default function IntroOverlay({ onSubmit }) {
       left: 0,
       width: '100vw',
       height: '100vh',
-      background: 'rgba(0,0,0,0.25)',
+      background: 'rgba(0,0,0,0.55)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'flex-start',

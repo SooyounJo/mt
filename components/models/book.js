@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
 
-const Background = () => {
-  const { scene } = useGLTF('/3d/background/full4.glb');
+const Book = (props) => {
+  const { scene } = useGLTF('/3d/book/book.glb');
 
   useEffect(() => {
     scene.traverse((child) => {
@@ -20,12 +19,12 @@ const Background = () => {
   return (
     <primitive 
       object={scene} 
-      position={[-1.7, -4.5, 0.4]}
-      rotation={[0, Math.PI / 2, 0]}
-      scale={35}
+      scale={40}
+      position={[1.8, -1, -1.3]}
+      rotation={[0, 1.6, 0]}
+      {...props}
     />
   );
 };
 
-export default Background;
-
+export default Book; 

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-const RecoModel = () => {
+const RecoModel = ({ onClick, ...props }) => {
   const { scene, error } = useGLTF('/3d/recode/reco.glb');
 
   useEffect(() => {
@@ -23,6 +23,15 @@ const RecoModel = () => {
         child.frustumCulled = false;
         child.visible = true;
         child.renderOrder = 1;
+        // 그림자 잘 보이도록 머티리얼 옵션 보정
+        if (
+          child.material &&
+          (child.material.type === 'MeshStandardMaterial' ||
+           child.material.type === 'MeshPhysicalMaterial')
+        ) {
+          child.material.transparent = false;
+          child.material.depthWrite = true;
+        }
 
         const originalMaterial = child.material;
         const meshBox = new THREE.Box3().setFromObject(child);
@@ -89,6 +98,9 @@ const RecoModel = () => {
       scale={2.5} 
       position={[0, -1.5, 0]} 
       rotation={[0, Math.PI / 2, 0]}
+      onClick={undefined}
+      onDoubleClick={onClick}
+      {...props}
     />
   );
 };

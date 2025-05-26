@@ -21,6 +21,14 @@ const LPModel = ({ travelText }) => {
         child.frustumCulled = false;
         child.visible = true;
         child.renderOrder = 1;
+        if (
+          child.material &&
+          (child.material.type === 'MeshStandardMaterial' ||
+           child.material.type === 'MeshPhysicalMaterial')
+        ) {
+          child.material.transparent = false;
+          child.material.depthWrite = true;
+        }
         const originalMaterial = child.material;
 
         if (originalMaterial.map) {

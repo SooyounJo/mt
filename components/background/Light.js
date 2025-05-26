@@ -60,19 +60,18 @@ const Light = () => {
       light.shadow.normalBias = 0.1;
 
       // 그림자 카메라 설정
-      light.shadow.camera.left = -15;
-      light.shadow.camera.right = 15;
-      light.shadow.camera.top = 15;
-      light.shadow.camera.bottom = -15;
+      light.shadow.camera.left = -5;
+      light.shadow.camera.right = 5;
+      light.shadow.camera.top = 5;
+      light.shadow.camera.bottom = -5;
       light.shadow.camera.near = 0.1;
       light.shadow.camera.far = 50;
       light.shadow.camera.updateProjectionMatrix();
-
-      light.position.set(-15, 6, -6);
-      light.intensity = 5;
+      light.position.set(-6, 6, -7);
+      light.intensity = 7;
 
       if (light.target) {
-        light.target.position.set(0, 1, 0);
+        light.target.position.set(0, 0, 0);
         light.target.updateMatrixWorld();
       }
 
@@ -86,21 +85,22 @@ const Light = () => {
       <Environment 
         files="/3d/hdri/meadow.hdr" 
         background
-        intensity={0.07}
+        intensity={0.04}
       />
 
       <ambientLight intensity={0.08} />
 
       <directionalLight
         name="directionalLight"
-        position={[-8, 8, -8]}
-        intensity={4.5}
+        position={[-6, 6, -7]}
+        intensity={7}
         color="#fff4e6"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-bias={-0.001}
         shadow-normalBias={0.1}
+        receiveShadow
       >
         <object3D position={[0, 0, 0]} />
       </directionalLight>
