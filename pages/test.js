@@ -312,8 +312,8 @@ export default function Test() {
           </Text3D>
         )}
         {/* 작은 정사각 플레인 */}
-        <mesh position={[-6, 4, 16]} receiveShadow castShadow>
-          <planeGeometry args={[1, 1]} />
+        <mesh position={[-0.2, -5.5, 11]} rotation={[Math.PI/2, 0, 0]} receiveShadow castShadow>
+          <boxGeometry args={[0.8, 0.8, 0.1]} />
           <meshStandardMaterial color="#fff" />
         </mesh>
       </Canvas>
