@@ -303,7 +303,7 @@ export default function Test() {
             bevelSize={0.02}
             bevelOffset={0}
             bevelSegments={4}
-            position={[-6.3, -4.9, 11]}
+            position={[-6.3, -5, 10.4]}
             castShadow
             receiveShadow
           >
@@ -311,6 +311,11 @@ export default function Test() {
             <meshPhysicalMaterial color="#fff" metalness={0.2} roughness={0.3} />
           </Text3D>
         )}
+        {/* 작은 정사각 플레인 */}
+        <mesh position={[-6, 4, 16]} receiveShadow castShadow>
+          <planeGeometry args={[1, 1]} />
+          <meshStandardMaterial color="#fff" />
+        </mesh>
       </Canvas>
     </div>
   );
