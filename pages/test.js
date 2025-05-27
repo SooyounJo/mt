@@ -5,14 +5,61 @@ import Link from 'next/link';
 import { TextureLoader } from 'three';
 import * as THREE from 'three';
 import { useRouter } from 'next/router';
+import TestLight from '../components/background/TestLight';
 
 function FullTestModel() {
-  const { scene } = useGLTF('/3d/background/full_test.glb');
+  const { scene } = useGLTF('/3d/background/testtt.glb');
   return (
     <primitive 
       object={scene} 
       position={[0, 0, 0]}
       scale={10}
+      receiveShadow
+      castShadow
+    />
+  );
+}
+
+function GlassModel() {
+  const { scene } = useGLTF('/3d/background/glass.glb');
+  React.useEffect(() => {
+    scene.traverse((child) => {
+      if (child.isMesh && child.name && child.name.toLowerCase().includes('glass')) {
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: 0xffffff,
+          metalness: 0.02,
+          roughness: 0.25,
+          transmission: 0.99,
+          thickness: 2.5,
+          ior: 1.3,
+          clearcoat: 0.5,
+          clearcoatRoughness: 0.2,
+          reflectivity: 0.12,
+          envMapIntensity: 0.18,
+          opacity: 0.7,
+          transparent: true,
+        });
+      }
+    });
+  }, [scene]);
+  return (
+    <primitive 
+      object={scene} 
+      position={[0, 0, 0]}
+      scale={10}
+      receiveShadow
+      castShadow
+    />
+  );
+}
+
+function LPModelTest() {
+  const { scene } = useGLTF('/3d/recode/lp5.glb');
+  return (
+    <primitive 
+      object={scene} 
+      position={[-5.5, -3.7, 8.2]}
+      scale={8}
       receiveShadow
       castShadow
     />
@@ -27,9 +74,9 @@ const pointLights = [
 function MemoryToneText() {
   return (
     <Text3D
-      font="/font/coop.json"
+      font="/font/black.json"
       size={2.5}
-      height={0.1}
+      height={0.05}
       curveSegments={16}
       bevelEnabled
       bevelThickness={0.08}
@@ -42,7 +89,15 @@ function MemoryToneText() {
       letterSpacing={0.25}
     >
       memory tone
-      <meshStandardMaterial color="#fffbe6" emissive="#ffe066" metalness={0.3} roughness={0.2} />
+      <meshPhysicalMaterial
+        color="#000"
+        metalness={0.3}
+        roughness={0.2}
+        transparent={false}
+        opacity={1}
+        depthWrite={true}
+        side={THREE.DoubleSide}
+      />
     </Text3D>
   );
 }
@@ -231,36 +286,12 @@ export default function Test() {
         >뷰 변경</button>
       </div>
       <Canvas camera={{ position: [6, 0, 15], fov: 35 }} shadows>
-        <ambientLight intensity={2.0} />
-        <directionalLight position={[5, 10, 7]} intensity={4.0} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
+        <TestLight pointLights={pointLights} />
         <BackgroundPlane url="/2d/night3.jpg" />
         <MemoryToneText />
-        {pointLights.map((light, idx) => {
-          // 방향 벡터 계산: target - position
-          const dir = [
-            light.target[0] - light.position[0],
-            light.target[1] - light.position[1],
-            light.target[2] - light.position[2]
-          ];
-          // 정규화
-          const len = Math.sqrt(dir[0]**2 + dir[1]**2 + dir[2]**2) || 1;
-          const normDir = [dir[0]/len, dir[1]/len, dir[2]/len];
-          return (
-            <>
-              <spotLight
-                key={idx}
-                position={light.position}
-                intensity={light.intensity}
-                distance={light.distance}
-                angle={Math.PI / 8}
-                penumbra={0.5}
-                castShadow
-                target-position={light.target}
-              />
-            </>
-          );
-        })}
         <FullTestModel />
+        <GlassModel />
+        <LPModelTest />
         {/* 올빗 컨트롤은 고정 카메라가 아닐 때만 활성화 */}
         {(!fixedCamera) && <OrbitControls enabled={isOrbitEnabled} enableZoom={isOrbitEnabled} enablePan={isOrbitEnabled} />}
         {/* 고정 카메라 시점 */}
