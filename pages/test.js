@@ -8,7 +8,7 @@ import { useRouter } from 'next/router';
 import TestLight from '../components/background/TestLight';
 
 function FullTestModel() {
-  const { scene } = useGLTF('/3d/background/testtt.glb');
+  const { scene } = useGLTF('/3d/background/test1glb.glb');
   return (
     <primitive 
       object={scene} 
@@ -27,16 +27,16 @@ function GlassModel() {
       if (child.isMesh && child.name && child.name.toLowerCase().includes('glass')) {
         child.material = new THREE.MeshPhysicalMaterial({
           color: 0xffffff,
-          metalness: 0.02,
-          roughness: 0.25,
-          transmission: 0.99,
-          thickness: 2.5,
-          ior: 1.3,
-          clearcoat: 0.5,
-          clearcoatRoughness: 0.2,
-          reflectivity: 0.12,
-          envMapIntensity: 0.18,
-          opacity: 0.7,
+          metalness: 0,
+          roughness: 0.05,
+          transmission: 1,
+          thickness: 5,
+          ior: 1.5,
+          clearcoat: 1,
+          clearcoatRoughness: 0,
+          reflectivity: 1,
+          envMapIntensity: 2,
+          opacity: 0.4,
           transparent: true,
         });
       }
@@ -71,37 +71,6 @@ const pointLights = [
   { position: [6.5, -1.7, 8], intensity: 50.0, distance: 40, target: [0, -1, 0] },
 ];
 
-function MemoryToneText() {
-  return (
-    <Text3D
-      font="/font/black.json"
-      size={2.5}
-      height={0.05}
-      curveSegments={16}
-      bevelEnabled
-      bevelThickness={0.08}
-      bevelSize={0.04}
-      bevelOffset={0}
-      bevelSegments={8}
-      position={[-6, 12, 8]}
-      castShadow
-      receiveShadow
-      letterSpacing={0.25}
-    >
-      memory tone
-      <meshPhysicalMaterial
-        color="#000"
-        metalness={0.3}
-        roughness={0.2}
-        transparent={false}
-        opacity={1}
-        depthWrite={true}
-        side={THREE.DoubleSide}
-      />
-    </Text3D>
-  );
-}
-
 function BackgroundPlane({ url = "/2d/plane.png" }) {
   const texture = React.useMemo(() => new TextureLoader().load(url), [url]);
   return (
@@ -115,7 +84,7 @@ function BackgroundPlane({ url = "/2d/plane.png" }) {
 
 export default function Test() {
   const router = useRouter();
-  const { destination } = router.query;
+  const { destination, name } = router.query;
   const [isOrbitEnabled, setIsOrbitEnabled] = useState(true);
   const [fixedCamera, setFixedCamera] = useState(null); // null, 1, 2, 3
   const animatingCamera = useRef(false);
@@ -169,7 +138,7 @@ export default function Test() {
         return;
       }
       if (view === 1) {
-        camera.position.set(40, 10, 55);
+        camera.position.set(40, 8, 45);
         camera.lookAt(4, -3, 0);
         camera.updateProjectionMatrix();
       } else if (view === 2) {
@@ -187,6 +156,18 @@ export default function Test() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      {name && (
+        <div style={{
+          position: 'absolute',
+          top: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          color: '#fff',
+          fontWeight: 700,
+          fontSize: 28,
+          zIndex: 1200
+        }}>{name}-s room</div>
+      )}
       <div style={{
         position: 'absolute',
         top: 24,
@@ -288,7 +269,6 @@ export default function Test() {
       <Canvas camera={{ position: [6, 0, 15], fov: 35 }} shadows>
         <TestLight pointLights={pointLights} />
         <BackgroundPlane url="/2d/night3.jpg" />
-        <MemoryToneText />
         <FullTestModel />
         <GlassModel />
         <LPModelTest />

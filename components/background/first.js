@@ -5,7 +5,7 @@ import { useGLTF } from '@react-three/drei';
 import { Environment } from '@react-three/drei';
 
 function BlurredFullModel() {
-  const { scene } = useGLTF('/3d/background/full4.glb');
+  const { scene } = useGLTF('/3d/background/test1glb.glb');
   return (
     <primitive 
       object={scene} 
@@ -91,7 +91,6 @@ export default function First() {
         gl={{ antialias: true, alpha: true }}
         shadows
       >
-        <Environment files="/3d/hdri/meadow.hdr" background />
         <CameraAngle />
         <ambientLight intensity={0.2} />
         <directionalLight 
