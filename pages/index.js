@@ -13,6 +13,7 @@ import First from '../components/background/first';
 import Filter from '../components/effects/Filter';
 import Book from '../components/models/book';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 export default function Home() {
   const [activeModel, setActiveModel] = useState(null);
@@ -23,6 +24,7 @@ export default function Home() {
   const [userInfo, setUserInfo] = useState(null);
   const [isOrbitEnabled, setIsOrbitEnabled] = useState(true);
   const [isRecoCloseup, setIsRecoCloseup] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // OrbitControls 비활성화 시 카메라 위치 고정
@@ -42,8 +44,11 @@ export default function Home() {
   const isPlaceVisible = activeModel === 'place';
 
   const handleIntroSubmit = (info) => {
-    setUserInfo(info);
-    setShowIntro(false);
+    // test.js로 바로 이동 (쿼리스트링 전달)
+    router.push({
+      pathname: '/test',
+      query: { name: info.name, destination: info.destination }
+    });
   };
 
   // 카메라 애니메이션

@@ -94,7 +94,7 @@ export default function Test() {
   const cameraTo = useRef({ position: [0,0,0], target: [0,0,0] });
 
   // 카메라 애니메이션 함수 (1초 대기 후 실행)
-  function animateCamera(from, to) {
+  function animateCamera(from, to, onComplete) {
     cameraFrom.current = from;
     cameraTo.current = to;
     animationProgress.current = 0;
@@ -103,6 +103,10 @@ export default function Test() {
     setTimeout(() => {
       animatingCamera.current = true;
       setFixedCamera(null); // OrbitControls도 비활성화
+      // 애니메이션 완료 후 콜백 실행
+      if (onComplete) {
+        setTimeout(onComplete, animationDuration * 1000);
+      }
     }, 1000);
   }
 
@@ -164,7 +168,7 @@ export default function Test() {
           transform: 'translateX(-50%)',
           color: '#fff',
           fontWeight: 700,
-          fontSize: 28,
+          fontSize: 14,
           zIndex: 1200
         }}>{name}-s room</div>
       )}
@@ -250,10 +254,19 @@ export default function Test() {
         >3</button>
         {/* 뷰 변경 애니메이션 버튼 */}
         <button
-          onClick={() => animateCamera(
-            { position: [40, 10, 55], target: [4, -3, 0] }, // 1번
-            { position: [0, 7, 20], target: [0, -7, 7] }   // 3번
-          )}
+          onClick={() => {
+            // 1번 → 2번 → 3번 순서로 이동
+            animateCamera(
+              { position: [40, 8, 45], target: [4, -3, 0] }, // 1번
+              { position: [5, 24, 60], target: [5, -7, 0] }, // 2번
+              () => {
+                animateCamera(
+                  { position: [5, 24, 60], target: [5, -7, 0] }, // 2번
+                  { position: [0, 7, 20], target: [0, -7, 7] }   // 3번
+                );
+              }
+            );
+          }}
           style={{
             padding: '8px 14px',
             backgroundColor: '#ffe066',
@@ -278,6 +291,26 @@ export default function Test() {
         {fixedCamera && <FixedCameraView view={fixedCamera} />}
         {/* 카메라 애니메이션만 동작할 때도 FixedCameraView 필요 */}
         {(!fixedCamera && animatingCamera.current) && <FixedCameraView />}
+        {/* 여행지 3D 텍스트 */}
+        {destination && (
+          <Text3D
+            font="/font/digi.json"
+            size={0.6}
+            height={0.1}
+            curveSegments={16}
+            bevelEnabled
+            bevelThickness={0.04}
+            bevelSize={0.02}
+            bevelOffset={0}
+            bevelSegments={4}
+            position={[-6.3, -4.9, 11]}
+            castShadow
+            receiveShadow
+          >
+            {destination}
+            <meshPhysicalMaterial color="#fff" metalness={0.2} roughness={0.3} />
+          </Text3D>
+        )}
       </Canvas>
     </div>
   );
