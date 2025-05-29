@@ -167,15 +167,18 @@ export default function Test() {
         return;
       }
       if (view === 1) {
-        camera.position.set(40, 8, 45);
+        camera.position.set(40, 16, 55);
+        camera.fov = 35;
         camera.lookAt(4, -3, 0);
         camera.updateProjectionMatrix();
       } else if (view === 2) {
-        camera.position.set(5, 24, 60);
+        camera.position.set(5, 24, 70);
+        camera.fov = 35;
         camera.lookAt(5, -7, 0);
         camera.updateProjectionMatrix();
       } else if (view === 3) {
-        camera.position.set(0, 7, 20);
+        camera.position.set(0, 7, 24);
+        camera.fov = 35;
         camera.lookAt(0, -7, 7);
         camera.updateProjectionMatrix();
       }
@@ -336,8 +339,22 @@ export default function Test() {
             <meshPhysicalMaterial color="#fff" metalness={0.2} roughness={0.3} />
           </Text3D>
         )}
-        {/* 작은 정사각 플레인 */}
+        {/* 플레인 1 */}
         <mesh position={[-0.2, -5.5, 11]} rotation={[Math.PI/2, 0, 0]} receiveShadow castShadow>
+          <boxGeometry args={[0.8, 0.8, 0.1]} />
+          <meshStandardMaterial color="#fff" />
+        </mesh>
+        {/* 플레인2 */}
+        <mesh position={[-0.2, -5.5, 12]} rotation={[Math.PI/2, 0, 0]} receiveShadow castShadow>
+          <boxGeometry args={[0.8, 0.8, 0.1]} />
+          <meshStandardMaterial color="#fff" />
+        </mesh>
+        {/* 플레인3 */}
+        <mesh position={[-1.2, -5.5, 11]} rotation={[Math.PI/2, 0, 0]} receiveShadow castShadow>
+          <boxGeometry args={[0.8, 0.8, 0.1]} />
+          <meshStandardMaterial color="#fff" />
+        </mesh>
+        <mesh position={[-1.2, -5.5, 12]} rotation={[Math.PI/2, 0, 0]} receiveShadow castShadow>
           <boxGeometry args={[0.8, 0.8, 0.1]} />
           <meshStandardMaterial color="#fff" />
         </mesh>
