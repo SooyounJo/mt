@@ -54,6 +54,37 @@ export default function Test() {
       {/* 카메라 컨트롤 UI */}
       <CameraControls cameraControl={cameraControl} />
       
+      {/* 페이지 넘김 버튼 */}
+      <div style={{
+        position: 'absolute',
+        bottom: 40,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1100
+      }}>
+        <button
+          onClick={() => {
+            if (window.AlbumPageControl) {
+              window.AlbumPageControl.turnPage();
+            }
+          }}
+          style={{
+            padding: '12px 24px',
+            background: '#ffe066',
+            color: '#222',
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            fontFamily: 'monospace'
+          }}
+        >
+          다음 →
+        </button>
+      </div>
+      
       <Canvas camera={{ position: [6, 0, 15], fov: 35 }} shadows>
         <Scene3D
           destination={destination}
