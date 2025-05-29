@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import IntroOverlay from '../components/IntroOverlay';
-import First from './first';
+import First from './intro_component';
 import { useRouter } from 'next/router';
 
 export default function Home() {
@@ -17,8 +16,7 @@ export default function Home() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      {showIntro && <First />}
-      {showIntro && <IntroOverlay onSubmit={handleIntroSubmit} />}
+      {showIntro && <First onSubmit={handleIntroSubmit} />}
     </div>
   );
 }
