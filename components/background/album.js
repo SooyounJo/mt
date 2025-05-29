@@ -16,7 +16,8 @@ export default function Album() {
   // 피봇 포인트 (직사각형 플레인의 좌측 끝)
   // 직사각형 플레인: position=[2.1, -5.54, 11.8], size=[2.6, 3.4, 0.1], rotation=[Math.PI/2, 0, 0]
   // 좌측 끝: 중심에서 x축 방향으로 -1.3만큼 이동 (2.1 - 2.6/2 = 0.8)
-  const pivotPoint = [0.8, -5.54, 11.8]; // 직사각형 플레인 좌측 끝
+  // Y축 0.2만큼 위로 이동 후 0.1만큼 아래로 이동: -5.54 + 0.2 - 0.1 = -5.44
+  const pivotPoint = [0.8, -5.44, 11.8]; // 직사각형 플레인 좌측 끝 (매테리얼에서 0.1 아래로)
   
   // 애니메이션 시작 함수
   const startPageTurn = () => {
@@ -69,11 +70,17 @@ export default function Album() {
       
       {/* 플레인5-8 + 메인플레인 그룹 (회전 애니메이션 대상) - 피봇 포인트에서 회전 */}
       <group ref={rightGroupRef} position={pivotPoint}>
-        {/* 피봇 포인트에서의 상대 위치로 조정 */}
+        {/* 피봇 포인트에서의 상대 위치로 조정 - 앞면 플레인들 */}
         <AnimatedMiniPlane position={[2.8 - pivotPoint[0], -5.5 - pivotPoint[1], 12 - pivotPoint[2]]} planeNumber={5} />
         <AnimatedMiniPlane position={[2.8 - pivotPoint[0], -5.5 - pivotPoint[1], 13 - pivotPoint[2]]} planeNumber={6} />
         <AnimatedMiniPlane position={[1.8 - pivotPoint[0], -5.5 - pivotPoint[1], 12 - pivotPoint[2]]} planeNumber={7} />
         <AnimatedMiniPlane position={[1.8 - pivotPoint[0], -5.5 - pivotPoint[1], 13 - pivotPoint[2]]} planeNumber={8} />
+        
+        {/* 뒷면 플레인들 (9-12) - 직사각형 플레인 뒷면에 배치 */}
+        <AnimatedMiniPlane position={[2.8 - pivotPoint[0], -5.8 - pivotPoint[1], 12 - pivotPoint[2]]} planeNumber={9} />
+        <AnimatedMiniPlane position={[2.8 - pivotPoint[0], -5.8 - pivotPoint[1], 13 - pivotPoint[2]]} planeNumber={10} />
+        <AnimatedMiniPlane position={[1.8 - pivotPoint[0], -5.8 - pivotPoint[1], 12 - pivotPoint[2]]} planeNumber={11} />
+        <AnimatedMiniPlane position={[1.8 - pivotPoint[0], -5.8 - pivotPoint[1], 13 - pivotPoint[2]]} planeNumber={12} />
         
         {/* 직사각형 메인 플레인 (피봇 포인트에서의 상대 위치) */}
         <mesh 
