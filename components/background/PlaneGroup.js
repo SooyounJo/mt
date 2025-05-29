@@ -1,48 +1,73 @@
 import React from 'react';
-import Plane from './Plane';
+import { Plane } from './Plane';
 
+/**
+ * @description
+ * PlaneGroup은 Plane 컴포넌트를 묶어 3D 그룹으로 렌더링합니다.
+ * 
+ * @props
+ * - planes: [{ number: number, position: [x, y, z] }]
+ * - groupPosition: 그룹의 전체 위치
+ */
 export function PlaneGroup({ planes, groupPosition = [0, 0, 0] }) {
   return (
     <group position={groupPosition}>
-      {planes.map((planeData) => (
-        <Plane
-          key={planeData.number}
-          position={planeData.position}
-          planeNumber={planeData.number}
+      {planes.map((plane) => (
+        <Plane 
+          key={plane.number} 
+          position={plane.position} 
+          planeNumber={plane.number} 
         />
       ))}
     </group>
   );
 }
 
-// 고정된 PlaneGroup 생성 헬퍼
-export function createStaticPlaneGroup(startPosition, planeNumbers) {
+/**
+ * @description
+ * 정적 위치의 플레인 그룹을 생성합니다.
+ * 2x2 그리드 형태로 4개의 플레인을 배치합니다.
+ */
+export function createStaticPlaneGroup(start, numbers) {
   const planes = [
-    { number: planeNumbers[0], position: [startPosition[0], -5.5, 12] },
-    { number: planeNumbers[1], position: [startPosition[0], -5.5, 13] },
-    { number: planeNumbers[2], position: [startPosition[0] - 1, -5.5, 12] },
-    { number: planeNumbers[3], position: [startPosition[0] - 1, -5.5, 13] }
+    { number: numbers[0], position: [start[0], -5.5, 12] },
+    { number: numbers[1], position: [start[0], -5.5, 13] },
+    { number: numbers[2], position: [start[0] - 1, -5.5, 12] },
+    { number: numbers[3], position: [start[0] - 1, -5.5, 13] }
   ];
-
   return <PlaneGroup planes={planes} />;
 }
 
-// 회전 가능한 PlaneGroup 생성 헬퍼
-export function createRotatingPlaneGroup(pivotPoint, frontPlanes, backPlanes) {
+/**
+ * @description
+ * 회전 가능한 플레인 그룹을 생성합니다.
+ * 피봇 포인트를 중심으로 앞면과 뒷면에 플레인을 배치합니다.
+ */
+export function createRotatingPlaneGroup(pivot, front, back) {
+  const offset = (x, y, z) => [x - pivot[0], y - pivot[1], z - pivot[2]];
+  
   const planes = [
     // 앞면 플레인
-    { number: frontPlanes[0], position: [2.8 - pivotPoint[0], -5.5 - pivotPoint[1], 12 - pivotPoint[2]] },
-    { number: frontPlanes[1], position: [2.8 - pivotPoint[0], -5.5 - pivotPoint[1], 13 - pivotPoint[2]] },
-    { number: frontPlanes[2], position: [1.8 - pivotPoint[0], -5.5 - pivotPoint[1], 12 - pivotPoint[2]] },
-    { number: frontPlanes[3], position: [1.8 - pivotPoint[0], -5.5 - pivotPoint[1], 13 - pivotPoint[2]] },
+    ...front.map((n, i) => ({
+      number: n,
+      position: offset(
+        i < 2 ? 2.8 : 1.8,  // X 좌표
+        -5.5,               // Y 좌표
+        12 + (i % 2)       // Z 좌표 (12 또는 13)
+      )
+    })),
     
     // 뒷면 플레인
-    { number: backPlanes[0], position: [2.8 - pivotPoint[0], -5.7 - pivotPoint[1], 12 - pivotPoint[2]] },
-    { number: backPlanes[1], position: [2.8 - pivotPoint[0], -5.7 - pivotPoint[1], 13 - pivotPoint[2]] },
-    { number: backPlanes[2], position: [1.8 - pivotPoint[0], -5.7 - pivotPoint[1], 13 - pivotPoint[2]] },
-    { number: backPlanes[3], position: [1.8 - pivotPoint[0], -5.7 - pivotPoint[1], 12 - pivotPoint[2]] }
+    ...back.map((n, i) => ({
+      number: n,
+      position: offset(
+        i < 2 ? 2.8 : 1.8,  // X 좌표
+        -5.7,               // Y 좌표
+        12 + (i % 2)       // Z 좌표 (12 또는 13)
+      )
+    }))
   ];
-
+  
   return <PlaneGroup planes={planes} />;
 }
 
