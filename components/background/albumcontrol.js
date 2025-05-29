@@ -1,5 +1,55 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Cylinder } from '@react-three/drei';
+
+// LP 모델 기본 설정
+const LP_CONFIG = {
+  radius: 1.2,
+  height: 0.05,
+  segments: 32,
+  color: '#1a1a1a',
+  metalness: 0.8,
+  roughness: 0.2
+};
+
+// LP 컴포넌트
+export function LP({ position = [0, 0, 0], rotation = [0, 0, 0] }) {
+  const lpRef = useRef();
+
+  useFrame(() => {
+    if (lpRef.current) {
+      lpRef.current.rotation.y += 0.01; // 회전 애니메이션
+    }
+  });
+
+  return (
+    <group position={position} rotation={rotation}>
+      {/* LP 본체 */}
+      <Cylinder
+        ref={lpRef}
+        args={[LP_CONFIG.radius, LP_CONFIG.radius, LP_CONFIG.height, LP_CONFIG.segments]}
+      >
+        <meshStandardMaterial
+          color={LP_CONFIG.color}
+          metalness={LP_CONFIG.metalness}
+          roughness={LP_CONFIG.roughness}
+        />
+      </Cylinder>
+      
+      {/* LP 중앙 라벨 */}
+      <Cylinder
+        args={[0.2, 0.2, LP_CONFIG.height + 0.001, LP_CONFIG.segments]}
+        position={[0, 0, 0]}
+      >
+        <meshStandardMaterial
+          color="#ffffff"
+          metalness={0.5}
+          roughness={0.5}
+        />
+      </Cylinder>
+    </group>
+  );
+}
 
 // 호버링 효과 설정
 const HOVER_CONFIG = {
@@ -252,4 +302,6 @@ export function usePageTurnAnimation() {
     secondPivotPoint,
     updateAnimations
   };
-} 
+}
+
+export default LP; 

@@ -130,7 +130,9 @@ const handlePlaneSelection = (planeNumber) => {
   if (!isPlaneSelectable(planeNumber)) return false;
 
   // 이미 선택된 플레인이면 선택 해제
-  if (Object.values(selectedPlanesState.selections).includes(planeNumber)) {
+  const isCurrentlySelected = Object.values(selectedPlanesState.selections).includes(planeNumber);
+  
+  if (isCurrentlySelected) {
     // 현재 단계에 해당하는 선택만 해제 가능
     if (
       (selectedPlanesState.currentStage === PROGRESS_STAGES.INITIAL && planeNumber <= 4) ||
@@ -145,14 +147,17 @@ const handlePlaneSelection = (planeNumber) => {
       else selectedPlanesState.selections.fourth = null;
       
       notifyStateChange();
-      return true;
     }
-    return false;
+    return true;
   }
 
   // 새로운 선택
   if (planeNumber <= 4) {
     selectedPlanesState.selections.first = planeNumber;
+    // 첫 번째 선택이 완료되면 자동으로 다음 단계로
+    if (selectedPlanesState.currentStage === PROGRESS_STAGES.INITIAL) {
+      selectedPlanesState.currentStage = PROGRESS_STAGES.SECOND_SELECT;
+    }
   } else if (planeNumber <= 8) {
     selectedPlanesState.selections.second = planeNumber;
   } else if (planeNumber <= 16) {
@@ -234,17 +239,7 @@ export function SelectableMiniPlane({ position, planeNumber, ...props }) {
   // 클릭 핸들러
   const handleClick = () => {
     if (!isSelectable) return;
-    
-    const wasSelected = Object.values(selectedPlanesState.selections).includes(planeNumber);
-    
-    if (handlePlaneSelection(planeNumber)) {
-      if (!wasSelected && canProgress()) {
-        if (window.AlbumPageControl) {
-          window.AlbumPageControl.turnPage();
-          progressToNextStage();
-        }
-      }
-    }
+    handlePlaneSelection(planeNumber);
   };
 
   return (

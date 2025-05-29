@@ -1,15 +1,15 @@
-import React from 'react';
-import { useGLTF } from '@react-three/drei';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-// LP5 모델 컴포넌트
-export default function LPModel() {
+// LP 컴포넌트
+export function LP({ position = [0, 0, 0], rotation = [0, 0, 0] }) {
   const { scene } = useGLTF('/3d/background/lp5.glb');
-  const groupRef = React.useRef();
+  const groupRef = useRef();
   const [center, setCenter] = React.useState([0, 0, 0]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (scene) {
       // 메시 전체의 중심 계산
       const box = new THREE.Box3().setFromObject(scene);
@@ -31,7 +31,7 @@ export default function LPModel() {
 
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += 0.004;
+      groupRef.current.rotation.y += 0.004; // 회전 애니메이션
     }
   });
 
@@ -40,4 +40,9 @@ export default function LPModel() {
       <primitive object={scene} />
     </group>
   );
-} 
+}
+
+// GLB 파일 프리로드
+useGLTF.preload('/3d/background/lp5.glb');
+
+export default LP; 
