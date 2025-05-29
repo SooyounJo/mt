@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Cylinder } from '@react-three/drei';
+import { usePlaneStore } from './planeState';
 
 // LP 모델 기본 설정
 const LP_CONFIG = {
@@ -145,9 +146,9 @@ export function usePageTurnAnimation() {
   const [firstSetProgress, setFirstSetProgress] = React.useState(0);
   const [secondSetProgress, setSecondSetProgress] = React.useState(0);
   const [currentSet, setCurrentSet] = React.useState(1); // 1: 첫 번째 세트, 2: 두 번째 세트
-  const [animationStep, setAnimationStep] = React.useState(0); // 0: 초기, 1: 1세트 완료, 2: 2세트 완료
   const [reverseAnimating, setReverseAnimating] = React.useState(false); // 역방향 애니메이션
   const animationDuration = 1.5; // 1.5초 애니메이션
+  const { setAnimationStep, animationStep } = usePlaneStore(); // animationStep도 가져오기
   
   // 피봇 포인트들
   const firstPivotPoint = [0.8, -5.44, 11.8]; // 첫 번째 세트 피봇
@@ -155,10 +156,10 @@ export function usePageTurnAnimation() {
   
   // 애니메이션 시작 함수
   const startPageTurn = () => {
-    if (currentSet === 1 && !firstSetAnimating && animationStep === 0) {
+    if (currentSet === 1 && !firstSetAnimating) {
       setFirstSetAnimating(true);
       setFirstSetProgress(0);
-    } else if (currentSet === 2 && !secondSetAnimating && animationStep === 1) {
+    } else if (currentSet === 2 && !secondSetAnimating) {
       setSecondSetAnimating(true);
       setSecondSetProgress(0);
     }
@@ -182,7 +183,7 @@ export function usePageTurnAnimation() {
     window.AlbumPageControl = {
       turnPage: startPageTurn,
       goToPrevious: goToPrevious,
-      animationStep: animationStep,
+      animationStep,
       canGoNext: (currentSet === 1 && animationStep === 0) || (currentSet === 2 && animationStep === 1),
       canGoPrevious: animationStep > 0 && !reverseAnimating
     };
@@ -209,7 +210,7 @@ export function usePageTurnAnimation() {
         // 애니메이션 완료
         if (newProgress >= 1) {
           setFirstSetAnimating(false);
-          setAnimationStep(1); // 1세트 완료
+          setAnimationStep(1); // 첫 번째 세트 회전 완료
           setCurrentSet(2); // 두 번째 세트로 전환
         }
         

@@ -26,6 +26,12 @@ export const usePlaneStore = create((set, get) => ({
     PAGE3: null
   },
   userAnswer: '', // 사용자 답변 저장
+  animationStep: 0, // 애니메이션 단계 추가 (0: 초기, 1: 첫번째 세트 회전 완료)
+
+  // 애니메이션 단계 업데이트
+  setAnimationStep: (step) => {
+    set({ animationStep: step });
+  },
 
   // 사용자 답변 업데이트
   setUserAnswer: (answer) => {

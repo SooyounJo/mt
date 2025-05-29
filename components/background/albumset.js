@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Text } from '@react-three/drei';
 import { useThree, useLoader } from '@react-three/fiber';
-import { TextureLoader, LinearFilter, Shape, ExtrudeGeometry } from 'three';
+import { TextureLoader, LinearFilter, Shape, ExtrudeGeometry, FrontSide } from 'three';
 import { AnimatedMiniPlane } from './albumcontrol';
 import { usePlaneStore } from './planeState';
 
@@ -254,7 +254,7 @@ const createTextCanvas = (text, width = 1024, height = 1024) => {
 };
 
 // PlayButton 컴포넌트
-export function PlayButton({ position, onClick }) {
+export function PlayButton({ position, onClick, scale = 1, rotation = [0, 0, 0] }) {
   const [hovered, setHovered] = useState(false);
   const buttonRef = useRef();
 
@@ -277,8 +277,8 @@ export function PlayButton({ position, onClick }) {
     <mesh
       ref={buttonRef}
       position={position}
-      rotation={[0, Math.PI / 2, 0]}
-      scale={0.5}
+      rotation={rotation}
+      scale={scale}
       onClick={onClick}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
@@ -295,27 +295,39 @@ export function PlayButton({ position, onClick }) {
 
 // 회전 가능한 앨범 세트 컴포넌트
 export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes, mainPlaneColor = "#a0a0a0", showQuestion = false, isSecondSet = false }) {
-  const { userAnswer, setUserAnswer } = usePlaneStore();
-  const backPlaneRef = useRef();
+  const { userAnswer, setUserAnswer, animationStep } = usePlaneStore();
+  const [opacity, setOpacity] = useState(0);
+  const meshRef = useRef();
 
-  // 질문 텍스처 메모이제이션
-  const questionTexture = useMemo(() => {
-    if (!isSecondSet) return null;
-
-    const defaultText = userAnswer ? userAnswer : "이 여행은 당신에게\n어떤 의미가 있는\n여행이었나요?\n\n(클릭하여 입력)";
-    const canvas = createTextCanvas(defaultText);
-    const texture = new TextureLoader().load(canvas.toDataURL());
+  // 17.png 텍스처 로드
+  const texture = useMemo(() => {
+    const texture = textureLoader.load('/2d/mini/17.png');
     texture.minFilter = LinearFilter;
     texture.magFilter = LinearFilter;
-    texture.anisotropy = 16;
     return texture;
-  }, [isSecondSet, userAnswer]);
+  }, []);
+
+  // 그라데이션 애니메이션 효과
+  useEffect(() => {
+    if (isSecondSet && animationStep >= 1) {
+      const fadeIn = setInterval(() => {
+        setOpacity(prev => {
+          if (prev >= 1) {
+            clearInterval(fadeIn);
+            return 1;
+          }
+          return prev + 0.05;
+        });
+      }, 50);
+      return () => clearInterval(fadeIn);
+    }
+  }, [isSecondSet, animationStep]);
 
   const handlePlaneClick = (event) => {
     if (!isSecondSet) return;
     event.stopPropagation();
     
-    const answer = prompt("이 여행은 당신에게 어떤 의미가 있는 여행이었나요?", userAnswer);
+    const answer = prompt("", userAnswer);  // 프롬프트 메시지 제거
     if (answer !== null) {
       setUserAnswer(answer);
     }
@@ -326,6 +338,11 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
     console.log("플레이 버튼 클릭됨");
     // 여기에 재생 로직 추가
   };
+
+  // 두 번째 세트이고 첫 번째 세트가 회전하지 않은 상태면 렌더링하지 않음
+  if (isSecondSet && animationStep < 1) {
+    return null;
+  }
 
   return (
     <group ref={groupRef} position={pivotPoint}>
@@ -357,61 +374,98 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
         <boxGeometry args={[2.6, 3.4, 0.1]} />
         <meshStandardMaterial 
           color={mainPlaneColor} 
-          transparent={isSecondSet}
-          opacity={isSecondSet ? 0.8 : 1}
+          transparent={false}
+          opacity={1}
         />
       </mesh>
 
-      {/* 뒷면 직사각형 플레인 */}
+      {/* 새로운 뒷면 직사각형 플레인 - 기본 플레인 */}
       {isSecondSet && (
-        <mesh 
-          ref={backPlaneRef}
-          position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.7 - pivotPoint[2]]} 
-          rotation={[-Math.PI/2, 0, 0]} 
-          receiveShadow 
-          castShadow
-          onClick={handlePlaneClick}
-        >
-          <boxGeometry args={[2.6, 3.4, 0.1]} />
-          <meshStandardMaterial 
-            color={mainPlaneColor} 
-            map={questionTexture}
-            side={2}
-            transparent={true}
-            opacity={0.95}
-            roughness={0.3}
-            metalness={0.1}
-          />
-        </mesh>
-      )}
+        <>
+          <mesh 
+            ref={meshRef}
+            position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.7 - pivotPoint[2]]} 
+            rotation={[-Math.PI/2, 0, 0]} 
+            receiveShadow 
+            castShadow
+          >
+            <boxGeometry args={[2.6, 3.4, 0.001]} />
+            <meshStandardMaterial 
+              color={mainPlaneColor}
+              transparent={true}
+              opacity={opacity}
+              side={FrontSide}
+              metalness={0.1}
+              roughness={0.3}
+            />
+          </mesh>
 
-      {/* 플레이 버튼 (두 번째 세트이고 답변이 있을 때만 표시) */}
-      {isSecondSet && userAnswer && userAnswer.trim() !== "" && (
-        <PlayButton 
-          position={[6.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.8 - pivotPoint[2]]}
-          onClick={handlePlayClick}
-        />
+          {/* 이미지 없는 뒷면 */}
+          <mesh 
+            position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.699 - pivotPoint[2]]} 
+            rotation={[Math.PI/2, 0, 0]} 
+            receiveShadow 
+            castShadow
+          >
+            <boxGeometry args={[2.6, 3.4, 0.001]} />
+            <meshStandardMaterial 
+              color={mainPlaneColor}
+              metalness={0.1}
+              roughness={0.3}
+              transparent={true}
+              opacity={opacity}
+              side={FrontSide}
+            />
+          </mesh>
+
+          {/* 17.png가 적용된 새로운 플레인 */}
+          <mesh 
+            position={[2.1 - pivotPoint[0], -5.59 - pivotPoint[1], 11.7 - pivotPoint[2]]} 
+            rotation={[-Math.PI/2, 0, 0]} 
+            receiveShadow 
+            castShadow
+          >
+            <boxGeometry args={[2.6, 3.4, 0.001]} />
+            <meshStandardMaterial 
+              map={texture}
+              transparent={true}
+              opacity={opacity}
+              metalness={0.1}
+              roughness={0.3}
+            />
+          </mesh>
+
+          {/* 플레이 버튼 */}
+          {animationStep >= 2 && (
+            <PlayButton 
+              position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 8.7 - pivotPoint[2]]}
+              onClick={handlePlayClick}
+              scale={1.2}
+              rotation={[0.5, 0, 5.2]}
+            />
+          )}
+        </>
       )}
 
       {/* 뒷면 플레인들 (두 번째 세트가 아닐 때만 표시) */}
       {!isSecondSet && backPlanes && (
         <>
-          <SelectableMiniPlane 
-            position={[2.8 - pivotPoint[0], -5.7 - pivotPoint[1], 12 - pivotPoint[2]]} 
-            planeNumber={backPlanes[0]} 
-          />
-          <SelectableMiniPlane 
-            position={[2.8 - pivotPoint[0], -5.7 - pivotPoint[1], 13 - pivotPoint[2]]} 
-            planeNumber={backPlanes[1]} 
-          />
-          <SelectableMiniPlane 
-            position={[1.8 - pivotPoint[0], -5.7 - pivotPoint[1], 13 - pivotPoint[2]]} 
-            planeNumber={backPlanes[2]} 
-          />
-          <SelectableMiniPlane 
-            position={[1.8 - pivotPoint[0], -5.7 - pivotPoint[1], 12 - pivotPoint[2]]} 
-            planeNumber={backPlanes[3]} 
-          />
+      <SelectableMiniPlane 
+        position={[2.8 - pivotPoint[0], -5.7 - pivotPoint[1], 12 - pivotPoint[2]]} 
+        planeNumber={backPlanes[0]} 
+      />
+      <SelectableMiniPlane 
+        position={[2.8 - pivotPoint[0], -5.7 - pivotPoint[1], 13 - pivotPoint[2]]} 
+        planeNumber={backPlanes[1]} 
+      />
+      <SelectableMiniPlane 
+        position={[1.8 - pivotPoint[0], -5.7 - pivotPoint[1], 13 - pivotPoint[2]]} 
+        planeNumber={backPlanes[2]} 
+      />
+      <SelectableMiniPlane 
+        position={[1.8 - pivotPoint[0], -5.7 - pivotPoint[1], 12 - pivotPoint[2]]} 
+        planeNumber={backPlanes[3]} 
+      />
         </>
       )}
     </group>
