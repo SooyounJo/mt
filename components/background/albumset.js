@@ -28,22 +28,25 @@ export const PLANE_SETS = {
 // 진행 단계 정의
 const PROGRESS_STAGES = {
   INITIAL: 0,        // 초기 상태 (1-4 선택 가능)
-  FIRST_GROUP: 1,    // 1-4 선택 후 (5-8 선택 가능)
-  SECOND_GROUP: 2,   // 5-8 선택 후 (9-16 선택 가능)
-  THIRD_GROUP: 3,    // 9-16 선택 후 (17-20 선택 가능)
+  SECOND_SELECT: 1,  // 1-4 선택 후 (5-8 선택 가능)
+  THIRD_SELECT: 2,   // 1-8 선택 완료 후 (9-16 선택 가능)
+  FINAL_SELECT: 3,   // 9-16 선택 완료 후 (17-20 선택 가능)
   COMPLETED: 4       // 완료 상태
+};
+
+// 선택된 플레인 관리를 위한 전역 상태
+const selectedPlanesState = {
+  currentStage: PROGRESS_STAGES.INITIAL,
+  selections: {
+    first: null,    // 1-4 중 선택된 번호
+    second: null,   // 5-8 중 선택된 번호
+    third: null,    // 9-16 중 선택된 번호
+    fourth: null    // 17-20 중 선택된 번호
+  }
 };
 
 // 이벤트 리스너 관리
 const listeners = new Set();
-
-// 선택된 플레인 관리를 위한 전역 상태
-const selectedPlanesState = {
-  selections: new Set(), // 선택된 플레인 번호들
-  currentStage: PROGRESS_STAGES.INITIAL,
-  movedPlanes: new Set(), // 이동 완료된 플레인들
-  disabledPlanes: new Set() // 비활성화된 플레인들
-};
 
 // 상태 변경 알림
 const notifyStateChange = () => {
@@ -56,58 +59,48 @@ export const subscribeToState = (listener) => {
   return () => listeners.delete(listener);
 };
 
-// 플레인이 속한 세트 찾기
-const getPlaneSet = (planeNumber) => {
-  return Object.entries(PLANE_SETS).find(([_, set]) => 
-    planeNumber >= set.range.start && planeNumber <= set.range.end
-  )?.[0] || null;
-};
-
-// 플레인의 목표 위치 가져오기
-const getTargetPosition = (planeNumber) => {
-  const setKey = getPlaneSet(planeNumber);
-  return setKey ? PLANE_SETS[setKey].targetPosition : null;
-};
-
 // 플레인이 현재 단계에서 선택 가능한지 확인
 const isPlaneSelectable = (planeNumber) => {
-  // 이미 이동 완료된 플레인은 항상 활성화 상태 유지
-  if (selectedPlanesState.movedPlanes.has(planeNumber)) {
+  // 이미 선택된 플레인은 선택 가능
+  if (Object.values(selectedPlanesState.selections).includes(planeNumber)) {
     return true;
-  }
-
-  // 비활성화된 플레인은 선택 불가
-  if (selectedPlanesState.disabledPlanes.has(planeNumber)) {
-    return false;
   }
 
   switch (selectedPlanesState.currentStage) {
     case PROGRESS_STAGES.INITIAL:
       return planeNumber >= 1 && planeNumber <= 4;
-    case PROGRESS_STAGES.FIRST_GROUP:
+    case PROGRESS_STAGES.SECOND_SELECT:
       return planeNumber >= 5 && planeNumber <= 8;
-    case PROGRESS_STAGES.SECOND_GROUP:
+    case PROGRESS_STAGES.THIRD_SELECT:
       return planeNumber >= 9 && planeNumber <= 16;
-    case PROGRESS_STAGES.THIRD_GROUP:
+    case PROGRESS_STAGES.FINAL_SELECT:
       return planeNumber >= 17 && planeNumber <= 20;
     default:
       return false;
   }
 };
 
+// 플레인의 목표 위치 가져오기
+const getTargetPosition = (planeNumber) => {
+  for (const set of Object.values(PLANE_SETS)) {
+    if (planeNumber >= set.range.start && planeNumber <= set.range.end) {
+      return set.targetPosition;
+    }
+  }
+  return null;
+};
+
 // 다음 단계로 진행 가능한지 확인
 const canProgress = () => {
-  const selections = selectedPlanesState.selections;
-  
   switch (selectedPlanesState.currentStage) {
     case PROGRESS_STAGES.INITIAL:
-      return Array.from(selections).some(num => num >= 1 && num <= 4);
-    case PROGRESS_STAGES.FIRST_GROUP:
-      return Array.from(selections).some(num => num >= 5 && num <= 8);
-    case PROGRESS_STAGES.SECOND_GROUP:
-      return Array.from(selections).some(num => num >= 9 && num <= 16);
-    case PROGRESS_STAGES.THIRD_GROUP:
-      return Array.from(selections).some(num => num >= 17 && num <= 20);
+      return selectedPlanesState.selections.first !== null;
+    case PROGRESS_STAGES.SECOND_SELECT:
+      return selectedPlanesState.selections.second !== null;
+    case PROGRESS_STAGES.THIRD_SELECT:
+      return selectedPlanesState.selections.third !== null;
+    case PROGRESS_STAGES.FINAL_SELECT:
+      return selectedPlanesState.selections.fourth !== null;
     default:
       return false;
   }
@@ -115,49 +108,20 @@ const canProgress = () => {
 
 // 다음 단계로 진행
 const progressToNextStage = () => {
-  const currentStage = selectedPlanesState.currentStage;
-  
-  // 현재 선택된 플레인을 이동 완료 상태로 표시
-  selectedPlanesState.selections.forEach(num => {
-    selectedPlanesState.movedPlanes.add(num);
-  });
-
-  // 이전 단계의 플레인들을 비활성화
-  switch (currentStage) {
+  switch (selectedPlanesState.currentStage) {
     case PROGRESS_STAGES.INITIAL:
-      for (let i = 1; i <= 4; i++) {
-        if (!selectedPlanesState.movedPlanes.has(i)) {
-          selectedPlanesState.disabledPlanes.add(i);
-        }
-      }
-      selectedPlanesState.currentStage = PROGRESS_STAGES.FIRST_GROUP;
+      selectedPlanesState.currentStage = PROGRESS_STAGES.SECOND_SELECT;
       break;
-    case PROGRESS_STAGES.FIRST_GROUP:
-      for (let i = 5; i <= 8; i++) {
-        if (!selectedPlanesState.movedPlanes.has(i)) {
-          selectedPlanesState.disabledPlanes.add(i);
-        }
-      }
-      selectedPlanesState.currentStage = PROGRESS_STAGES.SECOND_GROUP;
+    case PROGRESS_STAGES.SECOND_SELECT:
+      selectedPlanesState.currentStage = PROGRESS_STAGES.THIRD_SELECT;
       break;
-    case PROGRESS_STAGES.SECOND_GROUP:
-      for (let i = 9; i <= 16; i++) {
-        if (!selectedPlanesState.movedPlanes.has(i)) {
-          selectedPlanesState.disabledPlanes.add(i);
-        }
-      }
-      selectedPlanesState.currentStage = PROGRESS_STAGES.THIRD_GROUP;
+    case PROGRESS_STAGES.THIRD_SELECT:
+      selectedPlanesState.currentStage = PROGRESS_STAGES.FINAL_SELECT;
       break;
-    case PROGRESS_STAGES.THIRD_GROUP:
-      for (let i = 17; i <= 20; i++) {
-        if (!selectedPlanesState.movedPlanes.has(i)) {
-          selectedPlanesState.disabledPlanes.add(i);
-        }
-      }
+    case PROGRESS_STAGES.FINAL_SELECT:
       selectedPlanesState.currentStage = PROGRESS_STAGES.COMPLETED;
       break;
   }
-  
   notifyStateChange();
 };
 
@@ -165,22 +129,43 @@ const progressToNextStage = () => {
 const handlePlaneSelection = (planeNumber) => {
   if (!isPlaneSelectable(planeNumber)) return false;
 
-  // 이미 선택된 플레인이면 선택 해제 (이동 완료된 플레인은 해제 불가)
-  if (selectedPlanesState.selections.has(planeNumber)) {
-    if (!selectedPlanesState.movedPlanes.has(planeNumber)) {
-      selectedPlanesState.selections.delete(planeNumber);
+  // 이미 선택된 플레인이면 선택 해제
+  if (Object.values(selectedPlanesState.selections).includes(planeNumber)) {
+    // 현재 단계에 해당하는 선택만 해제 가능
+    if (
+      (selectedPlanesState.currentStage === PROGRESS_STAGES.INITIAL && planeNumber <= 4) ||
+      (selectedPlanesState.currentStage === PROGRESS_STAGES.SECOND_SELECT && planeNumber >= 5 && planeNumber <= 8) ||
+      (selectedPlanesState.currentStage === PROGRESS_STAGES.THIRD_SELECT && planeNumber >= 9 && planeNumber <= 16) ||
+      (selectedPlanesState.currentStage === PROGRESS_STAGES.FINAL_SELECT && planeNumber >= 17)
+    ) {
+      // 해당하는 선택 필드 찾기
+      if (planeNumber <= 4) selectedPlanesState.selections.first = null;
+      else if (planeNumber <= 8) selectedPlanesState.selections.second = null;
+      else if (planeNumber <= 16) selectedPlanesState.selections.third = null;
+      else selectedPlanesState.selections.fourth = null;
+      
       notifyStateChange();
+      return true;
     }
-    return true;
+    return false;
   }
 
   // 새로운 선택
-  selectedPlanesState.selections.add(planeNumber);
+  if (planeNumber <= 4) {
+    selectedPlanesState.selections.first = planeNumber;
+  } else if (planeNumber <= 8) {
+    selectedPlanesState.selections.second = planeNumber;
+  } else if (planeNumber <= 16) {
+    selectedPlanesState.selections.third = planeNumber;
+  } else {
+    selectedPlanesState.selections.fourth = planeNumber;
+  }
+
   notifyStateChange();
   return true;
 };
 
-// 수정된 SelectableMiniPlane 컴포넌트
+// SelectableMiniPlane 컴포넌트
 export function SelectableMiniPlane({ position, planeNumber, ...props }) {
   const [isSelected, setIsSelected] = React.useState(false);
   const [isSelectable, setIsSelectable] = React.useState(true);
@@ -196,12 +181,11 @@ export function SelectableMiniPlane({ position, planeNumber, ...props }) {
 
     const startPos = [...currentPosition];
     const startTime = Date.now();
-    const duration = 500; // 0.5초
+    const duration = 500;
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
       const easeProgress = 1 - Math.pow(1 - progress, 3);
 
       const newPos = startPos.map((start, i) => 
@@ -223,11 +207,11 @@ export function SelectableMiniPlane({ position, planeNumber, ...props }) {
   // 상태 변경 구독
   React.useEffect(() => {
     const updateState = () => {
-      const newIsSelected = selectedPlanesState.selections.has(planeNumber);
+      const newIsSelected = Object.values(selectedPlanesState.selections).includes(planeNumber);
       setIsSelected(newIsSelected);
       setIsSelectable(isPlaneSelectable(planeNumber));
       
-      if (newIsSelected || selectedPlanesState.movedPlanes.has(planeNumber)) {
+      if (newIsSelected) {
         const targetPos = getTargetPosition(planeNumber);
         if (targetPos) {
           animateToPosition(targetPos);
@@ -251,10 +235,10 @@ export function SelectableMiniPlane({ position, planeNumber, ...props }) {
   const handleClick = () => {
     if (!isSelectable) return;
     
-    const wasSelected = selectedPlanesState.selections.has(planeNumber);
+    const wasSelected = Object.values(selectedPlanesState.selections).includes(planeNumber);
     
     if (handlePlaneSelection(planeNumber)) {
-      if (wasSelected && canProgress()) {
+      if (!wasSelected && canProgress()) {
         if (window.AlbumPageControl) {
           window.AlbumPageControl.turnPage();
           progressToNextStage();
@@ -267,7 +251,7 @@ export function SelectableMiniPlane({ position, planeNumber, ...props }) {
     <AnimatedMiniPlane
       position={currentPosition}
       planeNumber={planeNumber}
-      color={isSelected || selectedPlanesState.movedPlanes.has(planeNumber) ? "#ffeb3b" : isSelectable ? "#fff" : "#808080"}
+      color={isSelected ? "#ffeb3b" : isSelectable ? "#fff" : "#808080"}
       onClick={handleClick}
       {...props}
     />
