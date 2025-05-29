@@ -9,7 +9,7 @@ const HOVER_CONFIG = {
 };
 
 // 개별 미니플레인 컴포넌트 (호버링 효과 포함)
-export function AnimatedMiniPlane({ position, planeNumber, ...props }) {
+export function AnimatedMiniPlane({ position, planeNumber, color = "#fff", onClick, ...props }) {
   const meshRef = React.useRef();
   const [hovered, setHovered] = React.useState(false);
   const targetScale = React.useRef(1);
@@ -41,9 +41,11 @@ export function AnimatedMiniPlane({ position, planeNumber, ...props }) {
     document.body.style.cursor = 'default';
   };
 
-  const handleClick = () => {
+  const handleClick = (event) => {
+    if (onClick) {
+      onClick(event);
+    }
     console.log(`플레인${planeNumber} 클릭됨!`);
-    // 여기에 클릭 이벤트 로직 추가 가능
   };
 
   return (
@@ -59,7 +61,11 @@ export function AnimatedMiniPlane({ position, planeNumber, ...props }) {
       {...props}
     >
       <boxGeometry args={[0.8, 0.8, 0.1]} />
-      <meshStandardMaterial color="#fff" />
+      <meshStandardMaterial 
+        color={color}
+        emissive={hovered ? "#666" : "#000"}
+        emissiveIntensity={hovered ? 0.5 : 0}
+      />
     </mesh>
   );
 }
@@ -89,4 +95,161 @@ export const AlbumControlAPI = {
 // 전역에서 접근 가능하도록 설정
 if (typeof window !== 'undefined') {
   window.AlbumControl = AlbumControlAPI;
+}
+
+// 페이지 넘김 애니메이션 훅
+export function usePageTurnAnimation() {
+  // 애니메이션 상태
+  const [firstSetAnimating, setFirstSetAnimating] = React.useState(false);
+  const [secondSetAnimating, setSecondSetAnimating] = React.useState(false);
+  const [firstSetProgress, setFirstSetProgress] = React.useState(0);
+  const [secondSetProgress, setSecondSetProgress] = React.useState(0);
+  const [currentSet, setCurrentSet] = React.useState(1); // 1: 첫 번째 세트, 2: 두 번째 세트
+  const [animationStep, setAnimationStep] = React.useState(0); // 0: 초기, 1: 1세트 완료, 2: 2세트 완료
+  const [reverseAnimating, setReverseAnimating] = React.useState(false); // 역방향 애니메이션
+  const animationDuration = 1.5; // 1.5초 애니메이션
+  
+  // 피봇 포인트들
+  const firstPivotPoint = [0.8, -5.44, 11.8]; // 첫 번째 세트 피봇
+  const secondPivotPoint = [0.8, -5.34, 11.8]; // 두 번째 세트 피봇
+  
+  // 애니메이션 시작 함수
+  const startPageTurn = () => {
+    if (currentSet === 1 && !firstSetAnimating && animationStep === 0) {
+      setFirstSetAnimating(true);
+      setFirstSetProgress(0);
+    } else if (currentSet === 2 && !secondSetAnimating && animationStep === 1) {
+      setSecondSetAnimating(true);
+      setSecondSetProgress(0);
+    }
+  };
+  
+  // 이전 버튼 함수 (역방향 또는 리셋)
+  const goToPrevious = () => {
+    if (animationStep === 1 && !reverseAnimating) {
+      // 1세트 역방향 애니메이션
+      setReverseAnimating(true);
+      setFirstSetProgress(1); // 1에서 시작해서 0으로
+    } else if (animationStep === 2 && !reverseAnimating) {
+      // 2세트 역방향 애니메이션  
+      setReverseAnimating(true);
+      setSecondSetProgress(1); // 1에서 시작해서 0으로
+    }
+  };
+  
+  // 전역 컨트롤 API
+  React.useEffect(() => {
+    window.AlbumPageControl = {
+      turnPage: startPageTurn,
+      goToPrevious: goToPrevious,
+      animationStep: animationStep,
+      canGoNext: (currentSet === 1 && animationStep === 0) || (currentSet === 2 && animationStep === 1),
+      canGoPrevious: animationStep > 0 && !reverseAnimating
+    };
+    return () => {
+      delete window.AlbumPageControl;
+    };
+  }, [currentSet, firstSetAnimating, secondSetAnimating, firstSetProgress, animationStep, reverseAnimating]);
+
+  // 애니메이션 업데이트 함수
+  const updateAnimations = (delta, rightGroupRef, secondGroupRef) => {
+    // 첫 번째 세트 애니메이션 (정방향)
+    if (firstSetAnimating && rightGroupRef.current && !reverseAnimating) {
+      setFirstSetProgress((prev) => {
+        const newProgress = Math.min(prev + delta / animationDuration, 1);
+        
+        // Z축 기준 180도 원 운동 회전 애니메이션 (Math.PI)
+        const rotationZ = newProgress * Math.PI; // 180도 회전
+        
+        // 다른 축은 0으로 고정하고 Z축만 회전
+        rightGroupRef.current.rotation.x = 0;
+        rightGroupRef.current.rotation.y = 0;
+        rightGroupRef.current.rotation.z = rotationZ;
+        
+        // 애니메이션 완료
+        if (newProgress >= 1) {
+          setFirstSetAnimating(false);
+          setAnimationStep(1); // 1세트 완료
+          setCurrentSet(2); // 두 번째 세트로 전환
+        }
+        
+        return newProgress;
+      });
+    }
+    
+    // 첫 번째 세트 역방향 애니메이션
+    if (reverseAnimating && rightGroupRef.current && animationStep === 1) {
+      setFirstSetProgress((prev) => {
+        const newProgress = Math.max(prev - delta / animationDuration, 0);
+        
+        // Z축 기준 역방향 회전
+        const rotationZ = newProgress * Math.PI;
+        
+        rightGroupRef.current.rotation.x = 0;
+        rightGroupRef.current.rotation.y = 0;
+        rightGroupRef.current.rotation.z = rotationZ;
+        
+        // 역방향 애니메이션 완료
+        if (newProgress <= 0) {
+          setReverseAnimating(false);
+          setAnimationStep(0); // 초기 상태로
+          setCurrentSet(1); // 첫 번째 세트로 전환
+        }
+        
+        return newProgress;
+      });
+    }
+    
+    // 두 번째 세트 애니메이션 (정방향)
+    if (secondSetAnimating && secondGroupRef.current && !reverseAnimating) {
+      setSecondSetProgress((prev) => {
+        const newProgress = Math.min(prev + delta / animationDuration, 1);
+        
+        // Z축 기준 180도 원 운동 회전 애니메이션 (Math.PI)
+        const rotationZ = newProgress * Math.PI; // 180도 회전
+        
+        // 다른 축은 0으로 고정하고 Z축만 회전
+        secondGroupRef.current.rotation.x = 0;
+        secondGroupRef.current.rotation.y = 0;
+        secondGroupRef.current.rotation.z = rotationZ;
+        
+        // 애니메이션 완료
+        if (newProgress >= 1) {
+          setSecondSetAnimating(false);
+          setAnimationStep(2); // 2세트 완료
+        }
+        
+        return newProgress;
+      });
+    }
+    
+    // 두 번째 세트 역방향 애니메이션
+    if (reverseAnimating && secondGroupRef.current && animationStep === 2) {
+      setSecondSetProgress((prev) => {
+        const newProgress = Math.max(prev - delta / animationDuration, 0);
+        
+        // Z축 기준 역방향 회전
+        const rotationZ = newProgress * Math.PI;
+        
+        secondGroupRef.current.rotation.x = 0;
+        secondGroupRef.current.rotation.y = 0;
+        secondGroupRef.current.rotation.z = rotationZ;
+        
+        // 역방향 애니메이션 완료
+        if (newProgress <= 0) {
+          setReverseAnimating(false);
+          setAnimationStep(1); // 1세트 완료 상태로
+          setCurrentSet(2); // 두 번째 세트 대기
+        }
+        
+        return newProgress;
+      });
+    }
+  };
+
+  return {
+    firstPivotPoint,
+    secondPivotPoint,
+    updateAnimations
+  };
 } 
