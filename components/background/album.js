@@ -1,6 +1,7 @@
 import React from 'react';
 import { useFrame } from '@react-three/fiber';
 import { StaticAlbumSet, RotatingAlbumSet, ALBUM_SETS } from './albumset';
+import { usePageTurnAnimation } from './albumcontrol';
 
 // 앨범 메인 컴포넌트
 export default function Album() {
@@ -8,6 +9,14 @@ export default function Album() {
   const groupRef = React.useRef();
   const rightGroupRef = React.useRef(); // 첫 번째 세트: 플레인5-8 + 메인플레인
   const secondGroupRef = React.useRef(); // 두 번째 세트: 플레인13-16 + 메인플레인2
+
+  // 페이지 넘김 애니메이션 훅 사용
+  const { updateAnimations } = usePageTurnAnimation();
+
+  // 매 프레임마다 애니메이션 업데이트
+  useFrame((_, delta) => {
+    updateAnimations(delta, rightGroupRef, secondGroupRef);
+  });
   
   return (
     <group ref={groupRef}>
