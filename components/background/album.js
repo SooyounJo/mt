@@ -23,16 +23,13 @@ export default function Album() {
       {/* 첫 번째 고정 그룹 (플레인 1-4) */}
       <StaticAlbumSet {...ALBUM_SETS.staticSet1} />
       
-      {/* 두 번째 고정 그룹 (플레인 21-24) */}
-      <StaticAlbumSet {...ALBUM_SETS.staticSet2} />
-      
       {/* 첫 번째 회전 세트 (플레인 5-12) */}
       <RotatingAlbumSet 
         groupRef={rightGroupRef}
         {...ALBUM_SETS.rotatingSet1}
       />
       
-      {/* 두 번째 회전 세트 (플레인 13-20) */}
+      {/* 두 번째 회전 세트 (플레인 13-16 + 질문) */}
       <RotatingAlbumSet 
         groupRef={secondGroupRef}
         {...ALBUM_SETS.rotatingSet2}

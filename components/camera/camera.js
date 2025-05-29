@@ -53,9 +53,9 @@ export default function FixedCameraView({
       camera.lookAt(5, -7, 0);
       camera.updateProjectionMatrix();
     } else if (view === 3) {
-      camera.position.set(0, 7, 24);
+      camera.position.set(-2, 10, 19);
       camera.fov = 35;
-      camera.lookAt(0, -7, 7);
+      camera.lookAt(-2, -5, 10);
       camera.updateProjectionMatrix();
     }
   });

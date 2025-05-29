@@ -69,10 +69,7 @@ export function AnimatedMiniPlane({ position, planeNumber, color = "#fff", onCli
   useFrame((_, delta) => {
     if (meshRef.current) {
       targetScale.current = hovered ? HOVER_CONFIG.scale : 1;
-      
-      // 부드러운 스케일 전환
       currentScale.current += (targetScale.current - currentScale.current) * HOVER_CONFIG.smoothness * delta;
-      
       meshRef.current.scale.set(
         currentScale.current,
         currentScale.current,
@@ -91,13 +88,6 @@ export function AnimatedMiniPlane({ position, planeNumber, color = "#fff", onCli
     document.body.style.cursor = 'default';
   };
 
-  const handleClick = (event) => {
-    if (onClick) {
-      onClick(event);
-    }
-    console.log(`플레인${planeNumber} 클릭됨!`);
-  };
-
   return (
     <mesh
       ref={meshRef}
@@ -105,7 +95,7 @@ export function AnimatedMiniPlane({ position, planeNumber, color = "#fff", onCli
       rotation={[Math.PI/2, 0, 0]}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
-      onClick={handleClick}
+      onClick={onClick}
       receiveShadow
       castShadow
       {...props}
