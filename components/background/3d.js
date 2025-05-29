@@ -55,7 +55,7 @@ function GlassModel() {
 }
 
 function LPModelTest() {
-  const { scene } = useGLTF('/3d/recode/lp5.glb');
+  const { scene } = useGLTF('/3d/background/lp5.glb');
   const groupRef = React.useRef();
   const [center, setCenter] = React.useState([0, 0, 0]);
 
