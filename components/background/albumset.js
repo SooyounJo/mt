@@ -166,49 +166,63 @@ const handlePlaneSelection = (planeNumber) => {
   return true;
 };
 
-// 텍스처 로더 인스턴스 생성
+// 전역 상수 및 유틸리티
 const textureLoader = new TextureLoader();
+const textureCache = new Map();
+const triangleShape = new Shape().moveTo(0, 0).lineTo(0, 1).lineTo(0.866, 0.5).lineTo(0, 0);
+const extrudeSettings = { depth: 0.2, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3 };
 
-// 텍스처 캐시 객체
-const textureCache = {};
-
-// 텍스처 로드 함수
+// 텍스처 로드 최적화 함수
 const loadTexture = (planeNumber) => {
-  if (!textureCache[planeNumber]) {
+  if (!textureCache.has(planeNumber)) {
     const texture = textureLoader.load(`/2d/mini/${planeNumber}.png`);
     texture.minFilter = LinearFilter;
     texture.magFilter = LinearFilter;
-    textureCache[planeNumber] = texture;
+    textureCache.set(planeNumber, texture);
   }
-  return textureCache[planeNumber];
+  return textureCache.get(planeNumber);
 };
 
-// SelectableMiniPlane 컴포넌트
-export function SelectableMiniPlane({ position, planeNumber, ...props }) {
+// 최적화된 PlayButton
+export function PlayButton({ position, onClick, scale = 1, rotation = [0, 0, 0] }) {
+  const [hovered, setHovered] = useState(false);
+  const meshProps = useMemo(() => ({
+    position,
+    rotation,
+    scale,
+    onClick,
+    onPointerOver: () => setHovered(true),
+    onPointerOut: () => setHovered(false)
+  }), [position, rotation, scale, onClick]);
+
+  return (
+    <mesh {...meshProps}>
+      <extrudeGeometry args={[triangleShape, extrudeSettings]} />
+      <meshStandardMaterial color={hovered ? "#ff6b6b" : "#ff0000"} metalness={0.5} roughness={0.5} />
+    </mesh>
+  );
+}
+
+// 최적화된 SelectableMiniPlane
+export function SelectableMiniPlane({ position, planeNumber }) {
   const { isPlaneSelectable, selectPlane, isPlaneSelected } = usePlaneStore();
   const selected = isPlaneSelected(planeNumber);
   const selectable = isPlaneSelectable(planeNumber);
+  const texture = useMemo(() => planeNumber >= 1 && planeNumber <= 16 ? loadTexture(planeNumber) : null, [planeNumber]);
 
-  // 텍스처 메모이제이션
-  const texture = useMemo(() => {
-    if (planeNumber >= 1 && planeNumber <= 16) {
-      return loadTexture(planeNumber);
-    }
-    return null;
-  }, [planeNumber]);
+  const meshProps = useMemo(() => ({
+    position,
+    rotation: [-Math.PI/2, 0, 0],
+    onClick: () => selectable && selectPlane(planeNumber)
+  }), [position, selectable, selectPlane, planeNumber]);
 
   return (
-    <mesh
-      position={position}
-      rotation={[-Math.PI/2, 0, 0]}
-      onClick={() => selectable && selectPlane(planeNumber)}
-      {...props}
-    >
+    <mesh {...meshProps}>
       <boxGeometry args={[1, 1, 0.1]} />
       <meshStandardMaterial 
         color={selected ? "#ffeb3b" : selectable ? "#fff" : "#808080"}
         map={texture}
-        transparent={true}
+        transparent
         side={2}
         metalness={0.1}
         roughness={0.5}
@@ -253,193 +267,63 @@ const createTextCanvas = (text, width = 1024, height = 1024) => {
   return canvas;
 };
 
-// PlayButton 컴포넌트
-export function PlayButton({ position, onClick, scale = 1, rotation = [0, 0, 0] }) {
-  const [hovered, setHovered] = useState(false);
-  const buttonRef = useRef();
-
-  // 삼각형 모양 생성
-  const triangleShape = new Shape();
-  triangleShape.moveTo(0, 0);
-  triangleShape.lineTo(0, 1);
-  triangleShape.lineTo(0.866, 0.5);
-  triangleShape.lineTo(0, 0);
-
-  const extrudeSettings = {
-    depth: 0.2,
-    bevelEnabled: true,
-    bevelThickness: 0.05,
-    bevelSize: 0.05,
-    bevelSegments: 3
-  };
-
-  return (
-    <mesh
-      ref={buttonRef}
-      position={position}
-      rotation={rotation}
-      scale={scale}
-      onClick={onClick}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      <extrudeGeometry args={[triangleShape, extrudeSettings]} />
-      <meshStandardMaterial 
-        color={hovered ? "#ff6b6b" : "#ff0000"}
-        metalness={0.5}
-        roughness={0.5}
-      />
-    </mesh>
-  );
-}
-
-// 회전 가능한 앨범 세트 컴포넌트
-export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes, mainPlaneColor = "#a0a0a0", showQuestion = false, isSecondSet = false }) {
-  const { userAnswer, setUserAnswer, animationStep } = usePlaneStore();
+// 최적화된 RotatingAlbumSet
+export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes, mainPlaneColor = "#a0a0a0", isSecondSet = false }) {
+  const { animationStep } = usePlaneStore();
   const [opacity, setOpacity] = useState(0);
-  const meshRef = useRef();
+  const texture = useMemo(() => isSecondSet ? loadTexture(17) : null, [isSecondSet]);
 
-  // 17.png 텍스처 로드
-  const texture = useMemo(() => {
-    const texture = textureLoader.load('/2d/mini/17.png');
-    texture.minFilter = LinearFilter;
-    texture.magFilter = LinearFilter;
-    return texture;
-  }, []);
-
-  // 그라데이션 애니메이션 효과
   useEffect(() => {
     if (isSecondSet && animationStep >= 1) {
       const fadeIn = setInterval(() => {
-        setOpacity(prev => {
-          if (prev >= 1) {
-            clearInterval(fadeIn);
-            return 1;
-          }
-          return prev + 0.05;
-        });
+        setOpacity(prev => prev >= 1 ? (clearInterval(fadeIn), 1) : prev + 0.05);
       }, 50);
       return () => clearInterval(fadeIn);
     }
   }, [isSecondSet, animationStep]);
 
-  const handlePlaneClick = (event) => {
-    if (!isSecondSet) return;
-    event.stopPropagation();
-    
-    const answer = prompt("", userAnswer);  // 프롬프트 메시지 제거
-    if (answer !== null) {
-      setUserAnswer(answer);
-    }
-  };
+  if (isSecondSet && animationStep < 1) return null;
 
-  const handlePlayClick = (event) => {
-    event.stopPropagation();
-    console.log("플레이 버튼 클릭됨");
-    // 여기에 재생 로직 추가
+  const mainPlaneProps = {
+    position: [2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.8 - pivotPoint[2]],
+    rotation: [Math.PI/2, 0, 0]
   };
-
-  // 두 번째 세트이고 첫 번째 세트가 회전하지 않은 상태면 렌더링하지 않음
-  if (isSecondSet && animationStep < 1) {
-    return null;
-  }
 
   return (
     <group ref={groupRef} position={pivotPoint}>
-      {/* 앞면 플레인들 */}
-      <SelectableMiniPlane 
-        position={[2.8 - pivotPoint[0], -5.5 - pivotPoint[1], 12 - pivotPoint[2]]} 
-        planeNumber={frontPlanes[0]} 
-      />
-      <SelectableMiniPlane 
-        position={[2.8 - pivotPoint[0], -5.5 - pivotPoint[1], 13 - pivotPoint[2]]} 
-        planeNumber={frontPlanes[1]} 
-      />
-      <SelectableMiniPlane 
-        position={[1.8 - pivotPoint[0], -5.5 - pivotPoint[1], 12 - pivotPoint[2]]} 
-        planeNumber={frontPlanes[2]} 
-      />
-      <SelectableMiniPlane 
-        position={[1.8 - pivotPoint[0], -5.5 - pivotPoint[1], 13 - pivotPoint[2]]} 
-        planeNumber={frontPlanes[3]} 
-      />
-      
-      {/* 메인 직사각형 플레인 (앞면) */}
-      <mesh 
-        position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.8 - pivotPoint[2]]} 
-        rotation={[Math.PI/2, 0, 0]} 
-        receiveShadow 
-        castShadow
-      >
-        <boxGeometry args={[2.6, 3.4, 0.1]} />
-        <meshStandardMaterial 
-          color={mainPlaneColor} 
-          transparent={false}
-          opacity={1}
+      {frontPlanes.map((planeNumber, index) => (
+        <SelectableMiniPlane
+          key={planeNumber}
+          position={[
+            (index < 2 ? 2.8 : 1.8) - pivotPoint[0],
+            -5.5 - pivotPoint[1],
+            (index % 2 === 0 ? 12 : 13) - pivotPoint[2]
+          ]}
+          planeNumber={planeNumber}
         />
+      ))}
+
+      <mesh {...mainPlaneProps}>
+        <boxGeometry args={[2.6, 3.4, 0.1]} />
+        <meshStandardMaterial color={mainPlaneColor} />
       </mesh>
 
-      {/* 새로운 뒷면 직사각형 플레인 - 기본 플레인 */}
       {isSecondSet && (
         <>
-          <mesh 
-            ref={meshRef}
-            position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.7 - pivotPoint[2]]} 
-            rotation={[-Math.PI/2, 0, 0]} 
-            receiveShadow 
-            castShadow
-          >
+          <mesh position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.7 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
             <boxGeometry args={[2.6, 3.4, 0.001]} />
-            <meshStandardMaterial 
-              color={mainPlaneColor}
-              transparent={true}
-              opacity={opacity}
-              side={FrontSide}
-              metalness={0.1}
-              roughness={0.3}
-            />
+            <meshStandardMaterial color={mainPlaneColor} transparent opacity={opacity} side={FrontSide} />
           </mesh>
 
-          {/* 이미지 없는 뒷면 */}
-          <mesh 
-            position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.699 - pivotPoint[2]]} 
-            rotation={[Math.PI/2, 0, 0]} 
-            receiveShadow 
-            castShadow
-          >
+          <mesh position={[2.1 - pivotPoint[0], -5.59 - pivotPoint[1], 11.7 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
             <boxGeometry args={[2.6, 3.4, 0.001]} />
-            <meshStandardMaterial 
-              color={mainPlaneColor}
-              metalness={0.1}
-              roughness={0.3}
-              transparent={true}
-              opacity={opacity}
-              side={FrontSide}
-            />
+            <meshStandardMaterial map={texture} transparent opacity={opacity} />
           </mesh>
 
-          {/* 17.png가 적용된 새로운 플레인 */}
-          <mesh 
-            position={[2.1 - pivotPoint[0], -5.59 - pivotPoint[1], 11.7 - pivotPoint[2]]} 
-            rotation={[-Math.PI/2, 0, 0]} 
-            receiveShadow 
-            castShadow
-          >
-            <boxGeometry args={[2.6, 3.4, 0.001]} />
-            <meshStandardMaterial 
-              map={texture}
-              transparent={true}
-              opacity={opacity}
-              metalness={0.1}
-              roughness={0.3}
-            />
-          </mesh>
-
-          {/* 플레이 버튼 */}
           {animationStep >= 2 && (
-            <PlayButton 
+            <PlayButton
               position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 8.7 - pivotPoint[2]]}
-              onClick={handlePlayClick}
+              onClick={() => console.log("플레이 버튼 클릭")}
               scale={1.2}
               rotation={[0.5, 0, 5.2]}
             />
@@ -447,75 +331,45 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
         </>
       )}
 
-      {/* 뒷면 플레인들 (두 번째 세트가 아닐 때만 표시) */}
-      {!isSecondSet && backPlanes && (
-        <>
-      <SelectableMiniPlane 
-        position={[2.8 - pivotPoint[0], -5.7 - pivotPoint[1], 12 - pivotPoint[2]]} 
-        planeNumber={backPlanes[0]} 
-      />
-      <SelectableMiniPlane 
-        position={[2.8 - pivotPoint[0], -5.7 - pivotPoint[1], 13 - pivotPoint[2]]} 
-        planeNumber={backPlanes[1]} 
-      />
-      <SelectableMiniPlane 
-        position={[1.8 - pivotPoint[0], -5.7 - pivotPoint[1], 13 - pivotPoint[2]]} 
-        planeNumber={backPlanes[2]} 
-      />
-      <SelectableMiniPlane 
-        position={[1.8 - pivotPoint[0], -5.7 - pivotPoint[1], 12 - pivotPoint[2]]} 
-        planeNumber={backPlanes[3]} 
-      />
-        </>
-      )}
+      {!isSecondSet && backPlanes?.map((planeNumber, index) => (
+        <SelectableMiniPlane
+          key={planeNumber}
+          position={[
+            (index < 2 ? 2.8 : 1.8) - pivotPoint[0],
+            -5.7 - pivotPoint[1],
+            (index % 2 === 0 ? 12 : 13) - pivotPoint[2]
+          ]}
+          planeNumber={planeNumber}
+        />
+      ))}
     </group>
   );
 }
 
-// 고정된 앨범 세트 컴포넌트
+// 최적화된 StaticAlbumSet
 export function StaticAlbumSet({ startPosition = [0, 0], planeNumbers = [] }) {
-  if (!startPosition || !Array.isArray(startPosition) || !planeNumbers || !Array.isArray(planeNumbers)) {
-    console.warn('StaticAlbumSet: Invalid props provided', { startPosition, planeNumbers });
-    return null;
-  }
+  if (!Array.isArray(planeNumbers) || planeNumbers.length === 0) return null;
 
   return (
     <>
-      {planeNumbers[0] && (
-        <SelectableMiniPlane position={[startPosition[0], -5.5, 12]} planeNumber={planeNumbers[0]} />
-      )}
-      {planeNumbers[1] && (
-        <SelectableMiniPlane position={[startPosition[0], -5.5, 13]} planeNumber={planeNumbers[1]} />
-      )}
-      {planeNumbers[2] && (
-        <SelectableMiniPlane position={[startPosition[0] - 1, -5.5, 12]} planeNumber={planeNumbers[2]} />
-      )}
-      {planeNumbers[3] && (
-        <SelectableMiniPlane position={[startPosition[0] - 1, -5.5, 13]} planeNumber={planeNumbers[3]} />
-      )}
+      {planeNumbers.map((planeNumber, index) => (
+        <SelectableMiniPlane
+          key={planeNumber}
+          position={[
+            startPosition[0] - (index >= 2 ? 1 : 0),
+            -5.5,
+            12 + (index % 2 === 1 ? 1 : 0)
+          ]}
+          planeNumber={planeNumber}
+        />
+      ))}
     </>
   );
 }
 
 // 앨범 세트 설정
 export const ALBUM_SETS = {
-  // 고정 세트 1 (플레인 1-4)
-  staticSet1: {
-    startPosition: [-0.2, -5.5],
-    planeNumbers: [1, 2, 3, 4]
-  },
-  
-  // 회전 세트 1 (플레인 5-12)
-  rotatingSet1: {
-    pivotPoint: [0.8, -5.44, 11.8],
-    frontPlanes: [5, 6, 7, 8],
-    backPlanes: [9, 10, 11, 12]
-  },
-  
-  // 회전 세트 2 (플레인 13-16 + 질문)
-  rotatingSet2: {
-    pivotPoint: [0.8, -5.34, 11.8],
-    frontPlanes: [13, 14, 15, 16],
-    isSecondSet: true
-  }
+  staticSet1: { startPosition: [-0.2, -5.5], planeNumbers: [1, 2, 3, 4] },
+  rotatingSet1: { pivotPoint: [0.8, -5.44, 11.8], frontPlanes: [5, 6, 7, 8], backPlanes: [9, 10, 11, 12] },
+  rotatingSet2: { pivotPoint: [0.8, -5.34, 11.8], frontPlanes: [13, 14, 15, 16], isSecondSet: true }
 }; 

@@ -40,7 +40,7 @@ export function Scene() {
       />
 
       {/* LP 모델 */}
-      <LP position={[0, -5, 10]} rotation={[-Math.PI / 2, 0, 0]} />
+      <LP position={[-5.5, -3.7, 8.2]} rotation={[0, 0, 0]} />
 
       {/* Plane 그룹 */}
       {createStaticPlaneGroup([-0.2, -5.5], [1, 2, 3, 4])}
