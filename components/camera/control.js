@@ -36,7 +36,7 @@ export function useCameraControl() {
       () => {
         animateCamera(
           { position: [5, 24, 60], target: [5, -7, 0] }, // 2번
-          { position: [0, 7, 20], target: [0, -7, 7] }   // 3번
+          { position: [0, 7, 24], target: [0, -7, 7] }   // 3번 (z좌표 24로 수정)
         );
       }
     );
