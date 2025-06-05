@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Text } from '@react-three/drei';
-import { useThree, useLoader } from '@react-three/fiber';
+import { Text, Text3D } from '@react-three/drei';
+import { useThree, useLoader, useFrame } from '@react-three/fiber';
 import { TextureLoader, LinearFilter, Shape, ExtrudeGeometry, FrontSide } from 'three';
 import { AnimatedMiniPlane } from './albumcontrol';
 import { usePlaneStore } from './planeState';
@@ -186,14 +186,42 @@ const loadTexture = (planeNumber) => {
 // 최적화된 PlayButton
 export function PlayButton({ position, onClick, scale = 1, rotation = [0, 0, 0] }) {
   const [hovered, setHovered] = useState(false);
+  const meshRef = useRef();
+  const time = useRef(0);
+  const targetScale = useRef(1);
+  const currentScale = useRef(1);
+
+  useFrame((_, delta) => {
+    time.current += delta;
+    if (meshRef.current) {
+      // 부드러운 상하 움직임
+      meshRef.current.position.y = position[1] + Math.sin(time.current * 2) * 0.1;
+      
+      // 부드러운 크기 변화
+      targetScale.current = hovered ? 1.2 : 1;
+      currentScale.current += (targetScale.current - currentScale.current) * 8 * delta;
+      meshRef.current.scale.set(
+        scale * currentScale.current,
+        scale * currentScale.current,
+        scale * currentScale.current
+      );
+    }
+  });
+
   const meshProps = useMemo(() => ({
+    ref: meshRef,
     position,
     rotation,
-    scale,
     onClick,
-    onPointerOver: () => setHovered(true),
-    onPointerOut: () => setHovered(false)
-  }), [position, rotation, scale, onClick]);
+    onPointerOver: () => {
+      setHovered(true);
+      document.body.style.cursor = 'pointer';
+    },
+    onPointerOut: () => {
+      setHovered(false);
+      document.body.style.cursor = 'default';
+    }
+  }), [position, rotation, onClick]);
 
   return (
     <mesh {...meshProps}>
@@ -231,47 +259,11 @@ export function SelectableMiniPlane({ position, planeNumber }) {
   );
 }
 
-// 텍스트 캔버스 생성 함수
-const createTextCanvas = (text, width = 1024, height = 1024) => {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext('2d', {
-    antialias: true,
-    alpha: true
-  });
-
-  // 배경색 설정
-  context.fillStyle = '#a0a0a0';
-  context.fillRect(0, 0, width, height);
-
-  // 텍스트 스타일 설정
-  context.fillStyle = '#000000';
-  context.font = 'bold 64px Arial';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
-  
-  // 안티앨리어싱 설정
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = 'high';
-
-  // 텍스트 줄바꿈 처리
-  const lines = text.split('\n');
-  const lineHeight = 80;
-  const startY = (height - (lines.length * lineHeight)) / 2;
-
-  lines.forEach((line, i) => {
-    context.fillText(line.trim(), width/2, startY + (i * lineHeight));
-  });
-
-  return canvas;
-};
-
 // 최적화된 RotatingAlbumSet
 export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes, mainPlaneColor = "#ffffff", isSecondSet = false }) {
   const { animationStep } = usePlaneStore();
   const [opacity, setOpacity] = useState(0);
-  const texture = useMemo(() => isSecondSet ? loadTexture(17) : null, [isSecondSet]);
+  const texture = useMemo(() => isSecondSet ? null : null, [isSecondSet]);
 
   useEffect(() => {
     if (isSecondSet && animationStep >= 1) {
@@ -317,16 +309,62 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
 
           <mesh position={[1.6 - pivotPoint[0], -5.59 - pivotPoint[1], 11.5 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
             <boxGeometry args={[2.8, 3.6, 0.001]} />
-            <meshStandardMaterial map={texture} transparent opacity={opacity} />
+            <meshStandardMaterial color="#ffffff" transparent opacity={opacity} />
           </mesh>
 
           {animationStep >= 2 && (
-            <PlayButton
-              position={[1.6 - pivotPoint[0], -5.54 - pivotPoint[1], 8.5 - pivotPoint[2]]}
-              onClick={() => console.log("플레이 버튼 클릭")}
-              scale={1.2}
-              rotation={[0.5, 0, 5.2]}
-            />
+            <>
+              <PlayButton
+                position={[1 - pivotPoint[0], -6.2 - pivotPoint[1], 11.5 - pivotPoint[2]]}
+                onClick={() => console.log("플레이 버튼 클릭")}
+                scale={1.2}
+                rotation={[0.5, 0, 5.2]}
+              />
+              <Text3D
+                font="/font/digi.json"
+                position={[0.5 - pivotPoint[0], -8.2 - pivotPoint[1], 11.5 - pivotPoint[2]]}
+                rotation={[-Math.PI/2 - 0.5, Math.PI, 0]}
+                size={0.6}
+                height={0.2}
+                curveSegments={12}
+                bevelEnabled
+                bevelThickness={0.04}
+                bevelSize={0.04}
+                bevelOffset={0}
+                bevelSegments={5}
+              >
+                PLAY
+                <meshStandardMaterial 
+                  color="#ff0000"
+                  metalness={0.5}
+                  roughness={0.5}
+                  emissive="#ff0000"
+                  emissiveIntensity={0.2}
+                />
+              </Text3D>
+              <Text3D
+                font="/font/digi.json"
+                position={[0.4 - pivotPoint[0], -8.2 - pivotPoint[1], 12.5 - pivotPoint[2]]}
+                rotation={[-Math.PI/2 - 0.5, Math.PI, 0]}
+                size={0.25}
+                height={0.1}
+                curveSegments={12}
+                bevelEnabled
+                bevelThickness={0.02}
+                bevelSize={0.02}
+                bevelOffset={0}
+                bevelSegments={5}
+              >
+                {`Back\nYour\nTravel\nMemories`}
+                <meshStandardMaterial 
+                  color="#ff0000"
+                  metalness={0.5}
+                  roughness={0.5}
+                  emissive="#ff0000"
+                  emissiveIntensity={0.2}
+                />
+              </Text3D>
+            </>
           )}
         </>
       )}

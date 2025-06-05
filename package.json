@@ -9,12 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@react-three/drei": "^10.0.6",
     "@react-three/fiber": "^9.1.2",
+    "@react-three/postprocessing": "^3.0.4",
     "next": "15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "styled-components": "^6.1.17",
+    "styled-components": "^6.1.18",
     "three": "^0.175.0"
   }
 }
