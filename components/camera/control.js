@@ -36,7 +36,7 @@ export function useCameraControl() {
       () => {
         animateCamera(
           { position: [5, 24, 60], target: [5, -7, 0] }, // 2번
-          { position: [-2, 10, 19], target: [-2, -5, 10] }   // 3번 (카메라 뷰 3과 동일하게 설정)
+          { position: [-4, 10, 19], target: [-4, -5, 10] }   // 3번 (좌측으로 이동)
         );
       }
     );

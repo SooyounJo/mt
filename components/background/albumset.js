@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Text, Text3D } from '@react-three/drei';
 import { useThree, useLoader, useFrame } from '@react-three/fiber';
-import { TextureLoader, LinearFilter, Shape, ExtrudeGeometry, FrontSide } from 'three';
+import { TextureLoader, LinearFilter, Shape, ExtrudeGeometry, FrontSide, Vector3 } from 'three';
 import { AnimatedMiniPlane } from './albumcontrol';
 import { usePlaneStore } from './planeState';
 import { PlayButton } from '../ui/PlayButton';
@@ -268,13 +268,19 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
       const camera = window.cameraControl.camera;
       if (!camera) return;
 
+      // 현재 카메라 위치와 시점 저장
+      const currentPosition = camera.position.clone();
+      const currentTarget = new THREE.Vector3();
+      camera.getWorldDirection(currentTarget);
+      currentTarget.multiplyScalar(10).add(camera.position); // 현재 보는 방향의 타겟 포인트 계산
+
       // 3번 뷰에서 5번 뷰로 스프링 전환
       springTransition(
         camera,
-        [-2, 9, 18.5],  // 3번 뷰 위치
-        [-3.5, -5, 10], // 3번 뷰 시점
-        [-4, 12, 16],   // 5번 뷰 위치
-        [-5.5, -4, 8.2],// 5번 뷰 시점
+        currentPosition.toArray(),  // 현재 위치에서 시작
+        currentTarget.toArray(),    // 현재 시점에서 시작
+        [-4, 12, 16],              // 5번 뷰 위치
+        [-5.5, -4, 8.2],           // 5번 뷰 시점
         () => {
           window.cameraControl.setFixedCamera(5);
           window.cameraControl.setIsOrbitEnabled(false);

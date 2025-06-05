@@ -24,6 +24,9 @@ export default function Test() {
     canGoNext: true,
     canGoPrevious: false
   });
+
+  // 버튼 투명도 상태 관리
+  const [buttonOpacity, setButtonOpacity] = React.useState(0);
   
   // 클라이언트 사이드에서 버튼 상태 업데이트
   React.useEffect(() => {
@@ -45,8 +48,47 @@ export default function Test() {
     return () => clearInterval(interval);
   }, []);
 
+  // 카메라 뷰 변경 감지 및 버튼 투명도 조절
+  React.useEffect(() => {
+    if (cameraControl.fixedCamera === 3) {
+      // 3번 뷰일 때 서서히 나타나게
+      const fadeIn = setInterval(() => {
+        setButtonOpacity(prev => {
+          if (prev >= 1) {
+            clearInterval(fadeIn);
+            return 1;
+          }
+          return prev + 0.05;
+        });
+      }, 50);
+      return () => clearInterval(fadeIn);
+    } else {
+      // 다른 뷰일 때는 투명하게
+      setButtonOpacity(0);
+    }
+  }, [cameraControl.fixedCamera]);
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      <style jsx>{`
+        .nav-button {
+          padding: 12px 18px;
+          background: #888;
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          font-weight: bold;
+          font-size: 16px;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          font-family: monospace;
+          transition: background-color 0.2s ease;
+        }
+        .nav-button:hover,
+        .nav-button:active {
+          background: #222;
+        }
+      `}</style>
       {name && (
         <div style={{
           position: 'absolute',
@@ -92,12 +134,13 @@ export default function Test() {
         position: 'absolute',
         bottom: 40,
         left: '50%',
-        transform: 'translateX(-50%)',
+        transform: 'translate(calc(-50% + 330px), -260px)',
         zIndex: 1100,
         display: 'flex',
-        gap: 12
+        gap: 300,
+        opacity: buttonOpacity,
+        transition: 'opacity 0.3s ease'
       }}>
-        {/* 이전 버튼 - 애니메이션 단계가 0보다 클 때만 표시 */}
         {buttonState.canGoPrevious && (
           <button
             onClick={() => {
@@ -105,24 +148,15 @@ export default function Test() {
                 window.AlbumPageControl.goToPrevious();
               }
             }}
+            className="nav-button"
             style={{
-              padding: '12px 24px',
-              background: '#888',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              fontFamily: 'monospace'
+              marginLeft: buttonState.canGoNext ? 0 : 348
             }}
           >
-            ← 이전
+            ←
           </button>
         )}
         
-        {/* 다음 버튼 - 더 이상 진행할 수 없을 때는 숨김 */}
         {buttonState.canGoNext && (
           <button
             onClick={() => {
@@ -130,20 +164,12 @@ export default function Test() {
                 window.AlbumPageControl.turnPage();
               }
             }}
+            className="nav-button"
             style={{
-              padding: '12px 24px',
-              background: '#ffe066',
-              color: '#222',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              fontFamily: 'monospace'
+              marginLeft: buttonState.canGoPrevious ? 0 : 348
             }}
           >
-            다음 →
+            →
           </button>
         )}
       </div>

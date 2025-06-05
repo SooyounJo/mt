@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 
-// 페이지 정의
-export const PAGES = {
-  PAGE1: { name: '1페이지', range: { start: 1, end: 4 } },
-  PAGE2: { name: '2페이지', range: { start: 5, end: 8 } },
-  PAGE3: { name: '3페이지', range: { start: 9, end: 16 } }
+// 페이지 및 단계 정의
+const PAGES = {
+  PAGE1: { range: { start: 1, end: 4 }, maxSelections: 1 },
+  PAGE2: { range: { start: 5, end: 8 }, maxSelections: 1 },
+  PAGE3: { range: { start: 9, end: 16 }, maxSelections: 1 }
 };
 
 // 페이지 순서
@@ -20,13 +20,77 @@ const getPageForPlane = (planeNumber) => {
 // Zustand store 생성
 export const usePlaneStore = create((set, get) => ({
   currentPage: 'PAGE1',
-  selectedPlanes: {
-    PAGE1: null,
-    PAGE2: null,
-    PAGE3: null
+  selectedMiniPlanes: new Set(),
+  userAnswer: '',
+  animationStep: 0,
+
+  // 미니 플레인 선택/해제
+  toggleMiniPlane: (planeNumber) => {
+    set(state => {
+      const newSelected = new Set(state.selectedMiniPlanes);
+      const page = getPageForPlane(planeNumber);
+      
+      // 이미 선택된 경우 해제
+      if (newSelected.has(planeNumber)) {
+        newSelected.delete(planeNumber);
+        return { selectedMiniPlanes: newSelected };
+      }
+
+      // 새로운 선택 시 조건 체크
+      if (page === state.currentPage) {
+        // 같은 페이지의 이전 선택 해제
+        Array.from(newSelected).forEach(num => {
+          if (getPageForPlane(num) === page) {
+            newSelected.delete(num);
+          }
+        });
+        
+        // 새로운 선택 추가
+        newSelected.add(planeNumber);
+        
+        // 자동으로 다음 페이지로 이동
+        if (page === 'PAGE1') {
+          return {
+            selectedMiniPlanes: newSelected,
+            currentPage: 'PAGE2'
+          };
+        } else if (page === 'PAGE2') {
+          return {
+            selectedMiniPlanes: newSelected,
+            currentPage: 'PAGE3'
+          };
+        }
+        
+        return { selectedMiniPlanes: newSelected };
+      }
+      
+      return state;
+    });
   },
-  userAnswer: '', // 사용자 답변 저장
-  animationStep: 0, // 애니메이션 단계 추가 (0: 초기, 1: 첫번째 세트 회전 완료)
+
+  // 미니 플레인이 선택되었는지 확인
+  isMiniPlaneSelected: (planeNumber) => {
+    return get().selectedMiniPlanes.has(planeNumber);
+  },
+
+  // 미니 플레인이 현재 선택 가능한지 확인
+  isMiniPlaneSelectable: (planeNumber) => {
+    const state = get();
+    const page = getPageForPlane(planeNumber);
+    
+    // 현재 페이지의 플레인만 선택 가능
+    if (page !== state.currentPage) return false;
+    
+    // 이미 선택된 플레인은 선택 해제 가능
+    if (state.selectedMiniPlanes.has(planeNumber)) return true;
+    
+    // 같은 페이지에 이미 선택된 플레인이 있는지 확인
+    const hasSelectionInPage = Array.from(state.selectedMiniPlanes).some(num => 
+      getPageForPlane(num) === page
+    );
+    
+    return !hasSelectionInPage;
+  },
 
   // 애니메이션 단계 업데이트
   setAnimationStep: (step) => {
@@ -36,50 +100,5 @@ export const usePlaneStore = create((set, get) => ({
   // 사용자 답변 업데이트
   setUserAnswer: (answer) => {
     set({ userAnswer: answer });
-  },
-
-  // 선택 가능 여부 확인
-  isPlaneSelectable: (planeNumber) => {
-    const { currentPage } = get();
-    const planePage = getPageForPlane(planeNumber);
-    return planePage === currentPage;
-  },
-
-  // Plane 선택
-  selectPlane: (planeNumber) => {
-    const { currentPage } = get();
-    const planePage = getPageForPlane(planeNumber);
-    
-    if (planePage !== currentPage) return;
-
-    set(state => {
-      // 같은 플레인을 다시 클릭하면 선택 해제
-      if (state.selectedPlanes[planePage] === planeNumber) {
-        return {
-          ...state,
-          selectedPlanes: {
-            ...state.selectedPlanes,
-            [planePage]: null
-          }
-        };
-      }
-
-      // 새로운 선택
-      const nextPage = PAGE_ORDER[PAGE_ORDER.indexOf(currentPage) + 1] || currentPage;
-      return {
-        selectedPlanes: {
-          ...state.selectedPlanes,
-          [planePage]: planeNumber
-        },
-        currentPage: nextPage
-      };
-    });
-  },
-
-  // 플레인이 선택되어 있는지 확인
-  isPlaneSelected: (planeNumber) => {
-    const { selectedPlanes } = get();
-    const planePage = getPageForPlane(planeNumber);
-    return selectedPlanes[planePage] === planeNumber;
   }
 })); 
