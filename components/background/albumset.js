@@ -218,9 +218,9 @@ export function SelectableMiniPlane({ position, planeNumber }) {
 
   return (
     <mesh {...meshProps}>
-      <boxGeometry args={[1, 1, 0.1]} />
+      <boxGeometry args={[0.85, 0.85, 0.1]} />
       <meshStandardMaterial 
-        color={selected ? "#ffeb3b" : selectable ? "#fff" : "#808080"}
+        color={selected ? "#ffeb3b" : "#ffffff"}
         map={texture}
         transparent
         side={2}
@@ -268,7 +268,7 @@ const createTextCanvas = (text, width = 1024, height = 1024) => {
 };
 
 // 최적화된 RotatingAlbumSet
-export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes, mainPlaneColor = "#a0a0a0", isSecondSet = false }) {
+export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes, mainPlaneColor = "#ffffff", isSecondSet = false }) {
   const { animationStep } = usePlaneStore();
   const [opacity, setOpacity] = useState(0);
   const texture = useMemo(() => isSecondSet ? loadTexture(17) : null, [isSecondSet]);
@@ -285,7 +285,7 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
   if (isSecondSet && animationStep < 1) return null;
 
   const mainPlaneProps = {
-    position: [2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.8 - pivotPoint[2]],
+    position: [1.6 - pivotPoint[0], -5.54 - pivotPoint[1], 11.6 - pivotPoint[2]],
     rotation: [Math.PI/2, 0, 0]
   };
 
@@ -295,34 +295,34 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
         <SelectableMiniPlane
           key={planeNumber}
           position={[
-            (index < 2 ? 2.8 : 1.8) - pivotPoint[0],
+            (index < 2 ? 2.3 : 1.3) - pivotPoint[0],
             -5.5 - pivotPoint[1],
-            (index % 2 === 0 ? 12 : 13) - pivotPoint[2]
+            (index % 2 === 0 ? 11.6 : 12.8) - pivotPoint[2]
           ]}
           planeNumber={planeNumber}
         />
       ))}
 
       <mesh {...mainPlaneProps}>
-        <boxGeometry args={[2.6, 3.4, 0.1]} />
-        <meshStandardMaterial color={mainPlaneColor} />
+        <boxGeometry args={[2.8, 3.6, 0.1]} />
+        <meshStandardMaterial color="#ffffff" />
       </mesh>
 
       {isSecondSet && (
         <>
-          <mesh position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 11.7 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
-            <boxGeometry args={[2.6, 3.4, 0.001]} />
-            <meshStandardMaterial color={mainPlaneColor} transparent opacity={opacity} side={FrontSide} />
+          <mesh position={[1.6 - pivotPoint[0], -5.54 - pivotPoint[1], 11.5 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
+            <boxGeometry args={[2.8, 3.6, 0.001]} />
+            <meshStandardMaterial color="#ffffff" transparent opacity={opacity} side={FrontSide} />
           </mesh>
 
-          <mesh position={[2.1 - pivotPoint[0], -5.59 - pivotPoint[1], 11.7 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
-            <boxGeometry args={[2.6, 3.4, 0.001]} />
+          <mesh position={[1.6 - pivotPoint[0], -5.59 - pivotPoint[1], 11.5 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
+            <boxGeometry args={[2.8, 3.6, 0.001]} />
             <meshStandardMaterial map={texture} transparent opacity={opacity} />
           </mesh>
 
           {animationStep >= 2 && (
             <PlayButton
-              position={[2.1 - pivotPoint[0], -5.54 - pivotPoint[1], 8.7 - pivotPoint[2]]}
+              position={[1.6 - pivotPoint[0], -5.54 - pivotPoint[1], 8.5 - pivotPoint[2]]}
               onClick={() => console.log("플레이 버튼 클릭")}
               scale={1.2}
               rotation={[0.5, 0, 5.2]}
@@ -335,9 +335,9 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
         <SelectableMiniPlane
           key={planeNumber}
           position={[
-            (index < 2 ? 2.8 : 1.8) - pivotPoint[0],
+            (index < 2 ? 2.3 : 1.3) - pivotPoint[0],
             -5.7 - pivotPoint[1],
-            (index % 2 === 0 ? 12 : 13) - pivotPoint[2]
+            (index % 2 === 0 ? 11.6 : 12.8) - pivotPoint[2]
           ]}
           planeNumber={planeNumber}
         />
@@ -358,7 +358,7 @@ export function StaticAlbumSet({ startPosition = [0, 0], planeNumbers = [] }) {
           position={[
             startPosition[0] - (index >= 2 ? 1 : 0),
             -5.5,
-            12 + (index % 2 === 1 ? 1 : 0)
+            11.8 + (index % 2 === 1 ? 1.1 : 0)
           ]}
           planeNumber={planeNumber}
         />
@@ -369,7 +369,7 @@ export function StaticAlbumSet({ startPosition = [0, 0], planeNumbers = [] }) {
 
 // 앨범 세트 설정
 export const ALBUM_SETS = {
-  staticSet1: { startPosition: [-0.2, -5.5], planeNumbers: [1, 2, 3, 4] },
-  rotatingSet1: { pivotPoint: [0.8, -5.44, 11.8], frontPlanes: [5, 6, 7, 8], backPlanes: [9, 10, 11, 12] },
-  rotatingSet2: { pivotPoint: [0.8, -5.34, 11.8], frontPlanes: [13, 14, 15, 16], isSecondSet: true }
+  staticSet1: { startPosition: [-0.7, -5.5], planeNumbers: [1, 2, 3, 4] },
+  rotatingSet1: { pivotPoint: [0.3, -5.44, 11.8], frontPlanes: [5, 6, 7, 8], backPlanes: [9, 10, 11, 12] },
+  rotatingSet2: { pivotPoint: [0.3, -5.34, 11.8], frontPlanes: [13, 14, 15, 16], isSecondSet: true }
 }; 

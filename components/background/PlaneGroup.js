@@ -9,7 +9,7 @@ import { Plane } from './Plane';
  * - planes: [{ number: number, position: [x, y, z] }]
  * - groupPosition: 그룹의 전체 위치
  */
-export function PlaneGroup({ planes, groupPosition = [0, 0, 0] }) {
+export function PlaneGroup({ planes, groupPosition = [0, 0, -1] }) {
   return (
     <group position={groupPosition}>
       {planes.map((plane) => (
@@ -30,10 +30,10 @@ export function PlaneGroup({ planes, groupPosition = [0, 0, 0] }) {
  */
 export function createStaticPlaneGroup(start, numbers) {
   const planes = [
-    { number: numbers[0], position: [start[0], -5.5, 12] },
-    { number: numbers[1], position: [start[0], -5.5, 13] },
-    { number: numbers[2], position: [start[0] - 1, -5.5, 12] },
-    { number: numbers[3], position: [start[0] - 1, -5.5, 13] }
+    { number: numbers[0], position: [start[0], -5.5, 10] },
+    { number: numbers[1], position: [start[0], -5.5, 11] },
+    { number: numbers[2], position: [start[0] - 1, -5.5, 10] },
+    { number: numbers[3], position: [start[0] - 1, -5.5, 11] }
   ];
   return <PlaneGroup planes={planes} />;
 }

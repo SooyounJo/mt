@@ -43,14 +43,14 @@ export function Scene() {
       <LP position={[-5.5, -3.7, 8.2]} rotation={[0, 0, 0]} />
 
       {/* Plane 그룹 */}
-      {createStaticPlaneGroup([-0.2, -5.5], [1, 2, 3, 4])}
+      {createStaticPlaneGroup([-0.7, -5.5], [1, 2, 3, 4])}
       {createRotatingPlaneGroup(
-        [0.8, -5.44, 11.8],
+        [0.3, -5.44, 11.8],
         [5, 6, 7, 8],
         [9, 10, 11, 12]
       )}
       {createRotatingPlaneGroup(
-        [0.8, -5.34, 11.8],
+        [0.3, -5.34, 11.8],
         [13, 14, 15, 16],
         [17, 18, 19, 20]
       )}
