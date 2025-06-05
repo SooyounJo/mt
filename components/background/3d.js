@@ -7,10 +7,11 @@ import SceneLights from '../lights/lights';
 import Album from './album';
 import FixedCameraView from '../camera/camera';
 import LPModel from './lp';
+import { CustomCursor } from '../cursor';
 
 // 3D 모델 컴포넌트들
 function FullTestModel() {
-  const { scene } = useGLTF('/3d/background/test1glb.glb');
+  const { scene } = useGLTF('/3d/background/fin.glb');
   return (
     <primitive 
       object={scene} 
@@ -29,17 +30,16 @@ function GlassModel() {
       if (child.isMesh && child.name && child.name.toLowerCase().includes('glass')) {
         child.material = new THREE.MeshPhysicalMaterial({
           color: 0xffffff,
-          metalness: 0,
-          roughness: 0.05,
-          transmission: 1,
-          thickness: 5,
+          metalness: 0.1,
+          roughness: 0.1,
+          transmission: 0.9,
+          thickness: 0.5,
           ior: 1.5,
           clearcoat: 1,
-          clearcoatRoughness: 0,
-          reflectivity: 1,
-          envMapIntensity: 2,
-          opacity: 0.4,
+          clearcoatRoughness: 0.1,
+          envMapIntensity: 1.5,
           transparent: true,
+          opacity: 0.5
         });
       }
     });
@@ -111,6 +111,7 @@ export default function Scene3D({
       <LPModel />
       <Album />
       <DestinationText destination={destination} />
+      <CustomCursor cameraView={fixedCamera} />
       
       {/* 올빗 컨트롤은 고정 카메라가 아닐 때만 활성화 */}
       {(!fixedCamera) && <OrbitControls enabled={isOrbitEnabled} enableZoom={isOrbitEnabled} enablePan={isOrbitEnabled} />}

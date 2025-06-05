@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 
 // LP 컴포넌트
 export function LP() {
-  const { scene } = useGLTF('/3d/background/lp5.glb');
+  const { scene } = useGLTF('/3d/background/lp.glb');
   const lpRef = useRef();
 
   useFrame(() => {
