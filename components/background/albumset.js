@@ -4,6 +4,8 @@ import { useThree, useLoader, useFrame } from '@react-three/fiber';
 import { TextureLoader, LinearFilter, Shape, ExtrudeGeometry, FrontSide } from 'three';
 import { AnimatedMiniPlane } from './albumcontrol';
 import { usePlaneStore } from './planeState';
+import { PlayButton } from '../ui/PlayButton';
+import { SelectableMiniPlane } from '../planes/SelectableMiniPlane';
 
 // 플레인 세트 정의
 export const PLANE_SETS = {
@@ -183,87 +185,74 @@ const loadTexture = (planeNumber) => {
   return textureCache.get(planeNumber);
 };
 
-// 최적화된 PlayButton
-export function PlayButton({ position, onClick, scale = 1, rotation = [0, 0, 0] }) {
-  const [hovered, setHovered] = useState(false);
-  const meshRef = useRef();
-  const time = useRef(0);
-  const targetScale = useRef(1);
-  const currentScale = useRef(1);
+// 스프링 애니메이션 설정
+const springConfig = {
+  tension: 120,  // 스프링의 강도
+  friction: 14,  // 감쇠 계수
+  precision: 0.001  // 애니메이션 종료 임계값
+};
 
-  useFrame((_, delta) => {
-    time.current += delta;
-    if (meshRef.current) {
-      // 부드러운 상하 움직임
-      meshRef.current.position.y = position[1] + Math.sin(time.current * 2) * 0.1;
-      
-      // 부드러운 크기 변화
-      targetScale.current = hovered ? 1.2 : 1;
-      currentScale.current += (targetScale.current - currentScale.current) * 8 * delta;
-      meshRef.current.scale.set(
-        scale * currentScale.current,
-        scale * currentScale.current,
-        scale * currentScale.current
-      );
+// 스프링 애니메이션 함수
+const spring = (current, target, velocity, config) => {
+  const dx = target - current;
+  const spring = dx * config.tension;
+  const damper = velocity * config.friction;
+  const acceleration = (spring - damper) / 1000;
+  const newVelocity = velocity + acceleration;
+  const newPosition = current + newVelocity;
+
+  if (Math.abs(dx) < config.precision && Math.abs(newVelocity) < config.precision) {
+    return [target, 0];
+  }
+  return [newPosition, newVelocity];
+};
+
+// 카메라 스프링 전환 함수
+const springTransition = (camera, fromPos, fromTarget, toPos, toTarget, onComplete) => {
+  const velocities = {
+    pos: { x: 0, y: 0, z: 0 },
+    target: { x: 0, y: 0, z: 0 }
+  };
+  const currentPos = { x: fromPos[0], y: fromPos[1], z: fromPos[2] };
+  const currentTarget = { x: fromTarget[0], y: fromTarget[1], z: fromTarget[2] };
+
+  const animate = () => {
+    // 위치 업데이트
+    [currentPos.x, velocities.pos.x] = spring(currentPos.x, toPos[0], velocities.pos.x, springConfig);
+    [currentPos.y, velocities.pos.y] = spring(currentPos.y, toPos[1], velocities.pos.y, springConfig);
+    [currentPos.z, velocities.pos.z] = spring(currentPos.z, toPos[2], velocities.pos.z, springConfig);
+
+    // 시점 업데이트
+    [currentTarget.x, velocities.target.x] = spring(currentTarget.x, toTarget[0], velocities.target.x, springConfig);
+    [currentTarget.y, velocities.target.y] = spring(currentTarget.y, toTarget[1], velocities.target.y, springConfig);
+    [currentTarget.z, velocities.target.z] = spring(currentTarget.z, toTarget[2], velocities.target.z, springConfig);
+  
+    // 카메라 업데이트
+    camera.position.set(currentPos.x, currentPos.y, currentPos.z);
+    camera.lookAt(currentTarget.x, currentTarget.y, currentTarget.z);
+
+    // 애니메이션 계속 여부 확인
+    if (
+      Math.abs(currentPos.x - toPos[0]) > springConfig.precision ||
+      Math.abs(currentPos.y - toPos[1]) > springConfig.precision ||
+      Math.abs(currentPos.z - toPos[2]) > springConfig.precision ||
+      Math.abs(currentTarget.x - toTarget[0]) > springConfig.precision ||
+      Math.abs(currentTarget.y - toTarget[1]) > springConfig.precision ||
+      Math.abs(currentTarget.z - toTarget[2]) > springConfig.precision
+    ) {
+      requestAnimationFrame(animate);
+    } else {
+      onComplete && onComplete();
     }
-  });
+  };
 
-  const meshProps = useMemo(() => ({
-    ref: meshRef,
-    position,
-    rotation,
-    onClick,
-    onPointerOver: () => {
-      setHovered(true);
-      document.body.style.cursor = 'pointer';
-    },
-    onPointerOut: () => {
-      setHovered(false);
-      document.body.style.cursor = 'default';
-    }
-  }), [position, rotation, onClick]);
-
-  return (
-    <mesh {...meshProps}>
-      <extrudeGeometry args={[triangleShape, extrudeSettings]} />
-      <meshStandardMaterial color={hovered ? "#ff6b6b" : "#ff0000"} metalness={0.5} roughness={0.5} />
-    </mesh>
-  );
-}
-
-// 최적화된 SelectableMiniPlane
-export function SelectableMiniPlane({ position, planeNumber }) {
-  const { isPlaneSelectable, selectPlane, isPlaneSelected } = usePlaneStore();
-  const selected = isPlaneSelected(planeNumber);
-  const selectable = isPlaneSelectable(planeNumber);
-  const texture = useMemo(() => planeNumber >= 1 && planeNumber <= 16 ? loadTexture(planeNumber) : null, [planeNumber]);
-
-  const meshProps = useMemo(() => ({
-    position,
-    rotation: [-Math.PI/2, 0, 0],
-    onClick: () => selectable && selectPlane(planeNumber)
-  }), [position, selectable, selectPlane, planeNumber]);
-
-  return (
-    <mesh {...meshProps}>
-      <boxGeometry args={[0.85, 0.85, 0.1]} />
-      <meshStandardMaterial 
-        color={selected ? "#ffeb3b" : "#ffffff"}
-        map={texture}
-        transparent
-        side={2}
-        metalness={0.1}
-        roughness={0.5}
-      />
-    </mesh>
-  );
-}
+  animate();
+};
 
 // 최적화된 RotatingAlbumSet
 export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes, mainPlaneColor = "#ffffff", isSecondSet = false }) {
   const { animationStep } = usePlaneStore();
   const [opacity, setOpacity] = useState(0);
-  const texture = useMemo(() => isSecondSet ? null : null, [isSecondSet]);
 
   useEffect(() => {
     if (isSecondSet && animationStep >= 1) {
@@ -273,6 +262,26 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
       return () => clearInterval(fadeIn);
     }
   }, [isSecondSet, animationStep]);
+
+  const handlePlayClick = () => {
+    if (typeof window !== 'undefined' && window.cameraControl) {
+      const camera = window.cameraControl.camera;
+      if (!camera) return;
+
+      // 3번 뷰에서 5번 뷰로 스프링 전환
+      springTransition(
+        camera,
+        [-2, 9, 18.5],  // 3번 뷰 위치
+        [-3.5, -5, 10], // 3번 뷰 시점
+        [-4, 12, 16],   // 5번 뷰 위치
+        [-5.5, -4, 8.2],// 5번 뷰 시점
+        () => {
+          window.cameraControl.setFixedCamera(5);
+          window.cameraControl.setIsOrbitEnabled(false);
+        }
+      );
+    }
+  };
 
   if (isSecondSet && animationStep < 1) return null;
 
@@ -314,12 +323,12 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
 
           {animationStep >= 2 && (
             <>
-              <PlayButton
+            <PlayButton
                 position={[1 - pivotPoint[0], -6.2 - pivotPoint[1], 11.5 - pivotPoint[2]]}
-                onClick={() => console.log("플레이 버튼 클릭")}
-                scale={1.2}
-                rotation={[0.5, 0, 5.2]}
-              />
+                onClick={handlePlayClick}
+              scale={1.2}
+              rotation={[0.5, 0, 5.2]}
+            />
               <Text3D
                 font="/font/digi.json"
                 position={[0.5 - pivotPoint[0], -8.2 - pivotPoint[1], 11.5 - pivotPoint[2]]}

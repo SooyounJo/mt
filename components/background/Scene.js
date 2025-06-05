@@ -2,6 +2,7 @@ import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { LP } from './lp';
+import { Pin } from './pin';
 import { createStaticPlaneGroup, createRotatingPlaneGroup } from './PlaneGroup';
 
 // 씬 설정
@@ -41,6 +42,9 @@ export function Scene() {
 
       {/* LP 모델 */}
       <LP position={[-5.5, -3.7, 8.2]} rotation={[0, 0, 0]} />
+      
+      {/* Pin 모델 */}
+      <Pin />
 
       {/* Plane 그룹 */}
       {createStaticPlaneGroup([-0.7, -5.5], [1, 2, 3, 4])}

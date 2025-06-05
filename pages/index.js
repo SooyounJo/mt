@@ -12,6 +12,13 @@ export default function Test() {
   // 카메라 제어 훅 사용
   const cameraControl = useCameraControl();
   
+  // 전역에서 카메라 컨트롤 접근 가능하도록 설정
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.cameraControl = cameraControl;
+    }
+  }, [cameraControl]);
+  
   // 버튼 상태 관리 (클라이언트 사이드)
   const [buttonState, setButtonState] = React.useState({
     canGoNext: true,

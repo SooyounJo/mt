@@ -53,9 +53,9 @@ export default function FixedCameraView({
       camera.lookAt(5, -7, 0);
       camera.updateProjectionMatrix();
     } else if (view === 3) {
-      camera.position.set(-2, 10, 19);
-      camera.fov = 35;
-      camera.lookAt(-2, -5, 10);
+      camera.position.set(-3.5, 9, 17.8);
+      camera.fov = 30;  // FOV를 낮춰서 왜곡 감소
+      camera.lookAt(-3.5, -5, 10);
       camera.updateProjectionMatrix();
     } else if (view === 4) {
       camera.position.set(15, 15, 25);
@@ -63,9 +63,9 @@ export default function FixedCameraView({
       camera.lookAt(0, -5, 10);
       camera.updateProjectionMatrix();
     } else if (view === 5) {
-      camera.position.set(-3, 8, 15);
+      camera.position.set(-4, 12, 16);
       camera.fov = 28;  // FOV를 더 낮춰서 왜곡 감소
-      camera.lookAt(-5.5, -3.7, 8.2);  // LP의 위치를 정확히 바라보도록 설정
+      camera.lookAt(-5.5, -4, 8.2);  // LP를 위에서 아래로 바라보도록 설정
       camera.updateProjectionMatrix();
     }
   });
