@@ -92,17 +92,20 @@ function DestinationText({ destination }) {
 
 // Pin 모델 컴포넌트
 function PinModel() {
-  const { scene } = useGLTF('/3d/background/pin.glb');
+  const { scene } = useGLTF('/3d/background/pin2.glb');
   return (
     <primitive 
       object={scene} 
-      position={[0.1, 0.2, 0.2]}
+      position={[-3.6, -3.9, 6.8]}
       scale={10}
       receiveShadow
       castShadow
     />
   );
 }
+
+// GLB 파일 프리로드
+useGLTF.preload('/3d/background/pin2.glb');
 
 // 메인 3D 씬 컴포넌트
 export default function Scene3D({ 
