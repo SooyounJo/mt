@@ -134,6 +134,36 @@ export default function CameraControls({ cameraControl }) {
         }}
       >3</button>
       
+      {/* 카메라 시점 4번 버튼 */}
+      <button
+        onClick={() => { setFixedCamera(4); setIsOrbitEnabled(false); }}
+        style={{
+          padding: '8px 14px',
+          backgroundColor: fixedCamera === 4 ? '#ffe066' : '#222',
+          color: fixedCamera === 4 ? '#222' : '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          fontFamily: 'monospace',
+        }}
+      >4</button>
+      
+      {/* 카메라 시점 5번 버튼 */}
+      <button
+        onClick={() => { setFixedCamera(5); setIsOrbitEnabled(false); }}
+        style={{
+          padding: '8px 14px',
+          backgroundColor: fixedCamera === 5 ? '#ffe066' : '#222',
+          color: fixedCamera === 5 ? '#222' : '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          fontFamily: 'monospace',
+        }}
+      >5</button>
+      
       {/* 뷰 변경 애니메이션 버튼 */}
       <button
         onClick={startCameraSequence}
