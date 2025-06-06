@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Cylinder } from '@react-three/drei';
 import { usePlaneStore } from './planeState';
+import * as THREE from 'three';
 
 // LP 모델 기본 설정
 const LP_CONFIG = {
@@ -195,7 +196,7 @@ export function usePageTurnAnimation() {
   // 애니메이션 업데이트 함수
   const updateAnimations = (delta, rightGroupRef, secondGroupRef) => {
     // 첫 번째 세트 애니메이션 (정방향)
-    if (firstSetAnimating && rightGroupRef.current && !reverseAnimating) {
+    if (firstSetAnimating && rightGroupRef?.current && !reverseAnimating) {
       setFirstSetProgress((prev) => {
         const newProgress = Math.min(prev + delta / animationDuration, 1);
         
@@ -203,14 +204,17 @@ export function usePageTurnAnimation() {
         const rotationZ = newProgress * Math.PI; // 180도 회전
         
         // 다른 축은 0으로 고정하고 Z축만 회전
-        rightGroupRef.current.rotation.x = 0;
-        rightGroupRef.current.rotation.y = 0;
-        rightGroupRef.current.rotation.z = rotationZ;
+        if (rightGroupRef?.current?.rotation) {
+          rightGroupRef.current.rotation.x = 0;
+          rightGroupRef.current.rotation.y = 0;
+          rightGroupRef.current.rotation.z = rotationZ;
+        }
         
         // 애니메이션 완료
-        if (newProgress >= 1) {
+        if (newProgress >= 1 && !reverseAnimating) {
           setFirstSetAnimating(false);
-          setAnimationStep(1); // 첫 번째 세트 회전 완료
+          // 상태 업데이트를 한 번만 실행
+          setTimeout(() => setAnimationStep(1), 0);
           setCurrentSet(2); // 두 번째 세트로 전환
         }
         
@@ -219,21 +223,24 @@ export function usePageTurnAnimation() {
     }
     
     // 첫 번째 세트 역방향 애니메이션
-    if (reverseAnimating && rightGroupRef.current && animationStep === 1) {
+    if (reverseAnimating && rightGroupRef?.current && animationStep === 1) {
       setFirstSetProgress((prev) => {
         const newProgress = Math.max(prev - delta / animationDuration, 0);
         
         // Z축 기준 역방향 회전
         const rotationZ = newProgress * Math.PI;
         
-        rightGroupRef.current.rotation.x = 0;
-        rightGroupRef.current.rotation.y = 0;
-        rightGroupRef.current.rotation.z = rotationZ;
+        if (rightGroupRef?.current?.rotation) {
+          rightGroupRef.current.rotation.x = 0;
+          rightGroupRef.current.rotation.y = 0;
+          rightGroupRef.current.rotation.z = rotationZ;
+        }
         
         // 역방향 애니메이션 완료
         if (newProgress <= 0) {
           setReverseAnimating(false);
-          setAnimationStep(0); // 초기 상태로
+          // 상태 업데이트를 한 번만 실행
+          setTimeout(() => setAnimationStep(0), 0);
           setCurrentSet(1); // 첫 번째 세트로 전환
         }
         
@@ -242,7 +249,7 @@ export function usePageTurnAnimation() {
     }
     
     // 두 번째 세트 애니메이션 (정방향)
-    if (secondSetAnimating && secondGroupRef.current && !reverseAnimating) {
+    if (secondSetAnimating && secondGroupRef?.current && !reverseAnimating) {
       setSecondSetProgress((prev) => {
         const newProgress = Math.min(prev + delta / animationDuration, 1);
         
@@ -250,14 +257,17 @@ export function usePageTurnAnimation() {
         const rotationZ = newProgress * Math.PI; // 180도 회전
         
         // 다른 축은 0으로 고정하고 Z축만 회전
-        secondGroupRef.current.rotation.x = 0;
-        secondGroupRef.current.rotation.y = 0;
-        secondGroupRef.current.rotation.z = rotationZ;
+        if (secondGroupRef?.current?.rotation) {
+          secondGroupRef.current.rotation.x = 0;
+          secondGroupRef.current.rotation.y = 0;
+          secondGroupRef.current.rotation.z = rotationZ;
+        }
         
         // 애니메이션 완료
-        if (newProgress >= 1) {
+        if (newProgress >= 1 && !reverseAnimating) {
           setSecondSetAnimating(false);
-          setAnimationStep(2); // 2세트 완료
+          // 상태 업데이트를 한 번만 실행
+          setTimeout(() => setAnimationStep(2), 0);
         }
         
         return newProgress;
@@ -265,21 +275,24 @@ export function usePageTurnAnimation() {
     }
     
     // 두 번째 세트 역방향 애니메이션
-    if (reverseAnimating && secondGroupRef.current && animationStep === 2) {
+    if (reverseAnimating && secondGroupRef?.current && animationStep === 2) {
       setSecondSetProgress((prev) => {
         const newProgress = Math.max(prev - delta / animationDuration, 0);
         
         // Z축 기준 역방향 회전
         const rotationZ = newProgress * Math.PI;
         
-        secondGroupRef.current.rotation.x = 0;
-        secondGroupRef.current.rotation.y = 0;
-        secondGroupRef.current.rotation.z = rotationZ;
+        if (secondGroupRef?.current?.rotation) {
+          secondGroupRef.current.rotation.x = 0;
+          secondGroupRef.current.rotation.y = 0;
+          secondGroupRef.current.rotation.z = rotationZ;
+        }
         
         // 역방향 애니메이션 완료
         if (newProgress <= 0) {
           setReverseAnimating(false);
-          setAnimationStep(1); // 1세트 완료 상태로
+          // 상태 업데이트를 한 번만 실행
+          setTimeout(() => setAnimationStep(1), 0);
           setCurrentSet(2); // 두 번째 세트 대기
         }
         
@@ -293,6 +306,174 @@ export function usePageTurnAnimation() {
     secondPivotPoint,
     updateAnimations
   };
+}
+
+// 스프링 전환 함수
+const springTransition = (camera, startPos, startTarget, endPos, endTarget, onComplete) => {
+  let progress = 0;
+  const duration = 2; // 2초 동안 전환
+  const startTime = Date.now();
+
+  const animate = () => {
+    const currentTime = Date.now();
+    progress = Math.min((currentTime - startTime) / (duration * 1000), 1);
+    
+    // 이징 함수 적용
+    const easeProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-out
+
+    // 위치 보간
+    camera.position.set(
+      startPos[0] + (endPos[0] - startPos[0]) * easeProgress,
+      startPos[1] + (endPos[1] - startPos[1]) * easeProgress,
+      startPos[2] + (endPos[2] - startPos[2]) * easeProgress
+    );
+
+    // 시점 보간
+    const currentTarget = new THREE.Vector3(
+      startTarget[0] + (endTarget[0] - startTarget[0]) * easeProgress,
+      startTarget[1] + (endTarget[1] - startTarget[1]) * easeProgress,
+      startTarget[2] + (endTarget[2] - startTarget[2]) * easeProgress
+    );
+    camera.lookAt(currentTarget);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      onComplete?.();
+    }
+  };
+
+  animate();
+};
+
+export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes, mainPlaneColor = "#ffffff", isSecondSet = false }) {
+  const { animationStep, selectedMiniPlanes } = usePlaneStore();
+  const [opacity, setOpacity] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    if (isSecondSet && animationStep >= 1) {
+      const fadeIn = setInterval(() => {
+        setOpacity(prev => prev >= 1 ? (clearInterval(fadeIn), 1) : prev + 0.05);
+      }, 50);
+      return () => clearInterval(fadeIn);
+    }
+  }, [isSecondSet, animationStep]);
+
+  const handlePlayClick = async () => {
+    if (typeof window !== 'undefined' && window.cameraControl) {
+      const camera = window.cameraControl.camera;
+      if (!camera) return;
+
+      setIsGenerating(true);
+
+      try {
+        // 현재 카메라 위치와 시점 저장
+        const currentPosition = camera.position.clone();
+        const currentTarget = new THREE.Vector3();
+        camera.getWorldDirection(currentTarget);
+        currentTarget.multiplyScalar(10).add(camera.position);
+
+        // 3번 뷰에서 5번 뷰로 스프링 전환
+        springTransition(
+          camera,
+          currentPosition.toArray(),
+          currentTarget.toArray(),
+          [-4, 12, 16],
+          [-5.5, -4, 8.2],
+          async () => {
+            window.cameraControl.setFixedCamera(5);
+            window.cameraControl.setIsOrbitEnabled(false);
+
+            // Pin 회전 시작 이벤트 발생
+            window.dispatchEvent(new CustomEvent('startPinRotation'));
+
+            // 선택된 플레인들로 음악 생성
+            const selectedPlanesArray = Array.from(selectedMiniPlanes);
+            if (selectedPlanesArray.length > 0) {
+              try {
+                const { generateMusic } = await import('../../utils/api');
+                const result = await generateMusic(selectedPlanesArray);
+                
+                // 음악 재생 및 모달 표시
+                if (result.audioUrl) {
+                  const audio = new Audio(result.audioUrl);
+                  audio.play();
+                  
+                  // 모달 표시 (전역 이벤트 발생)
+                  window.dispatchEvent(new CustomEvent('showMusicModal', {
+                    detail: {
+                      audioUrl: result.audioUrl,
+                      prompt: result.prompt,
+                      characteristics: result.characteristics
+                    }
+                  }));
+                }
+              } catch (error) {
+                console.error('음악 생성 중 오류:', error);
+                alert('음악 생성에 실패했습니다.');
+              }
+            }
+          }
+        );
+      } catch (error) {
+        console.error('카메라 전환 중 오류:', error);
+      } finally {
+        setIsGenerating(false);
+      }
+    }
+  };
+
+  if (isSecondSet && animationStep < 1) return null;
+
+  return (
+    <group ref={groupRef} position={pivotPoint}>
+      {frontPlanes.map((planeNumber, index) => (
+        <SelectableMiniPlane
+          key={planeNumber}
+          position={[
+            (index < 2 ? 2.3 : 1.3) - pivotPoint[0],
+            -5.5 - pivotPoint[1],
+            (index % 2 === 0 ? 11.6 : 12.8) - pivotPoint[2]
+          ]}
+          planeNumber={planeNumber}
+          onClick={handlePlayClick}
+        />
+      ))}
+
+      <mesh position={[1.6 - pivotPoint[0], -5.54 - pivotPoint[1], 11.6 - pivotPoint[2]]} rotation={[Math.PI/2, 0, 0]}>
+        <boxGeometry args={[2.8, 3.6, 0.1]} />
+        <meshStandardMaterial color={mainPlaneColor} />
+      </mesh>
+
+      {isSecondSet && (
+        <>
+          <mesh position={[1.6 - pivotPoint[0], -5.54 - pivotPoint[1], 11.5 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
+            <boxGeometry args={[2.8, 3.6, 0.001]} />
+            <meshStandardMaterial color="#ffffff" transparent opacity={opacity} />
+          </mesh>
+
+          <mesh position={[1.6 - pivotPoint[0], -5.59 - pivotPoint[1], 11.5 - pivotPoint[2]]} rotation={[-Math.PI/2, 0, 0]}>
+            <boxGeometry args={[2.8, 3.6, 0.001]} />
+            <meshStandardMaterial color="#ffffff" transparent opacity={opacity} />
+          </mesh>
+        </>
+      )}
+
+      {backPlanes.map((planeNumber, index) => (
+        <SelectableMiniPlane
+          key={planeNumber}
+          position={[
+            (index < 2 ? 2.3 : 1.3) - pivotPoint[0],
+            -5.7 - pivotPoint[1],
+            (index % 2 === 0 ? 11.6 : 12.8) - pivotPoint[2]
+          ]}
+          planeNumber={planeNumber}
+          onClick={handlePlayClick}
+        />
+      ))}
+    </group>
+  );
 }
 
 export default LP; 

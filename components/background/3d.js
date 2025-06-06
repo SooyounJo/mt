@@ -32,14 +32,14 @@ function GlassModel() {
           color: 0xffffff,
           metalness: 0.1,
           roughness: 0.1,
-          transmission: 0.9,
-          thickness: 0.5,
-          ior: 1.5,
-          clearcoat: 1,
+          transmission: 0.95,  // 빛 투과율 증가
+          thickness: 0.2,      // 두께 감소
+          ior: 1.2,           // 굴절률 감소
+          clearcoat: 0.1,     // 코팅 효과 감소
           clearcoatRoughness: 0.1,
-          envMapIntensity: 1.5,
+          envMapIntensity: 0.5,
           transparent: true,
-          opacity: 0.5
+          opacity: 0.1        // 90% 투명도
         });
       }
     });

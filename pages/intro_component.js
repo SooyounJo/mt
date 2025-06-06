@@ -152,7 +152,7 @@ export default function First({ onSubmit }) {
             <input type="text" value={name} onChange={e => setName(e.target.value)} style={{width: '100%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc'}} />
           </label>
           <label style={{marginBottom: 18, width: '100%', color: '#fff'}}>
-            여행지
+            여행장소
             <input type="text" value={destination} onChange={e => setDestination(e.target.value)} style={{width: '100%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc'}} />
           </label>
           <button type="submit" style={{padding: '10px 24px', borderRadius: 6, background: '#222', color: '#fff', border: 'none', fontWeight: 'bold', fontSize: 16, cursor: 'pointer'}}>시작하기</button>

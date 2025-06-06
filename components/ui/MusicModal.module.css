@@ -1,0 +1,121 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: none;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.modalContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px 0 0 12px;
+  width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: -4px 0 6px rgba(0, 0, 0, 0.1);
+  margin-right: 0;
+  pointer-events: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0.5rem;
+  line-height: 1;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: #f0f0f0;
+}
+
+.title {
+  margin: 0 0 1.5rem;
+  padding-left: 3rem;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.audioPlayer {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.audioPlayer audio {
+  width: 100%;
+}
+
+.characteristics {
+  margin-bottom: 1.5rem;
+}
+
+.characteristics h3 {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+  color: #444;
+}
+
+.characteristics ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.characteristics li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
+}
+
+.characteristics strong {
+  color: #555;
+  margin-right: 0.5rem;
+}
+
+.prompt {
+  background: #f8f8f8;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.prompt h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: #444;
+}
+
+.prompt p {
+  margin: 0;
+  line-height: 1.5;
+  color: #666;
+  font-size: 0.9rem;
+} 
