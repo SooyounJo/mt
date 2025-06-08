@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Scene3D from '../components/background/3d';
 import CameraControls, { useCameraControl } from '../components/camera/control';
-import MusicModal from './MusicModal';
+// import MusicModal from './MusicModal';
 import { springTransition } from '../components/albumcontrol';
 
 // 플레인 코드 매핑 수정
@@ -65,10 +65,10 @@ export default function MainPage() {
   // 현재 페이지 상태 추가
   const [currentPage, setCurrentPage] = useState(1);
   
-  // 음악 생성 상태
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [showMusicModal, setShowMusicModal] = useState(false);
+  // 음악 생성 상태 - 일시적으로 비활성화
+  // const [isGenerating, setIsGenerating] = useState(false);
+  // const [audioUrl, setAudioUrl] = useState(null);
+  // const [showMusicModal, setShowMusicModal] = useState(false);
   
   // 클라이언트 사이드에서 버튼 상태 업데이트
   React.useEffect(() => {
@@ -166,93 +166,93 @@ export default function MainPage() {
     });
   };
 
-  // 재생 버튼 핸들러 개선
-  const handlePlay = async () => {
-    console.log('=== 재생 버튼 클릭 ===');
-    console.log('현재 선택 상태:', {
-      계절: selections.season,
-      날씨: selections.weather,
-      장소: selections.place
-    });
+  // 재생 버튼 핸들러 개선 - API 관련 기능 무효화
+  // const handlePlay = async () => {
+  //   console.log('=== 재생 버튼 클릭 ===');
+  //   console.log('현재 선택 상태:', {
+  //     계절: selections.season,
+  //     날씨: selections.weather,
+  //     장소: selections.place
+  //   });
 
-    if (!selections.season || !selections.weather || !selections.place) {
-      const missing = [];
-      if (!selections.season) missing.push('계절');
-      if (!selections.weather) missing.push('날씨');
-      if (!selections.place) missing.push('장소');
+  //   if (!selections.season || !selections.weather || !selections.place) {
+  //     const missing = [];
+  //     if (!selections.season) missing.push('계절');
+  //     if (!selections.weather) missing.push('날씨');
+  //     if (!selections.place) missing.push('장소');
       
-      alert(`다음 항목을 선택해주세요: ${missing.join(', ')}`);
-      return;
-    }
+  //     alert(`다음 항목을 선택해주세요: ${missing.join(', ')}`);
+  //     return;
+  //   }
 
-    try {
-      setIsGenerating(true);
-      console.log('음악 생성 시작');
+  //   try {
+  //     setIsGenerating(true);
+  //     console.log('음악 생성 시작');
       
-      await springTransition();
+  //     await springTransition();
 
-      const response = await fetch('/api/generate-music', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          seasonCode: selections.season,
-          weatherCode: selections.weather,
-          placeCode: selections.place
-        })
-      });
+  //     const response = await fetch('/api/generate-music', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       body: JSON.stringify({
+  //         seasonCode: selections.season,
+  //         weatherCode: selections.weather,
+  //         placeCode: selections.place
+  //       })
+  //     });
 
-      let data;
-      const contentType = response.headers.get('content-type');
+  //     let data;
+  //     const contentType = response.headers.get('content-type');
       
-      try {
-        if (contentType && contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          const text = await response.text();
-          console.log('서버 응답 (raw):', text);
-          try {
-            data = JSON.parse(text);
-          } catch (parseError) {
-            console.error('JSON 파싱 오류:', parseError);
-            throw new Error('서버 응답을 처리할 수 없습니다. 관리자에게 문의해주세요.');
-          }
-        }
-      } catch (parseError) {
-        console.error('응답 처리 오류:', parseError);
-        if (response.status === 402) {
-          throw new Error('크레딧이 부족합니다. 크레딧을 충전해주세요.');
-        } else if (response.status === 429) {
-          throw new Error('너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
-        } else if (response.status === 401) {
-          throw new Error('API 키가 유효하지 않습니다. 관리자에게 문의해주세요.');
-        } else if (response.status === 403) {
-          throw new Error('크레딧이 부족하거나 API 접근 권한이 없습니다.');
-        }
-        throw new Error('서버 응답을 처리할 수 없습니다. 관리자에게 문의해주세요.');
-      }
+  //     try {
+  //       if (contentType && contentType.includes('application/json')) {
+  //         data = await response.json();
+  //       } else {
+  //         const text = await response.text();
+  //         console.log('서버 응답 (raw):', text);
+  //         try {
+  //           data = JSON.parse(text);
+  //         } catch (parseError) {
+  //           console.error('JSON 파싱 오류:', parseError);
+  //           throw new Error('서버 응답을 처리할 수 없습니다. 관리자에게 문의해주세요.');
+  //         }
+  //       }
+  //     } catch (parseError) {
+  //       console.error('응답 처리 오류:', parseError);
+  //       if (response.status === 402) {
+  //         throw new Error('크레딧이 부족합니다. 크레딧을 충전해주세요.');
+  //       } else if (response.status === 429) {
+  //         throw new Error('너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
+  //       } else if (response.status === 401) {
+  //         throw new Error('API 키가 유효하지 않습니다. 관리자에게 문의해주세요.');
+  //       } else if (response.status === 403) {
+  //         throw new Error('크레딧이 부족하거나 API 접근 권한이 없습니다.');
+  //       }
+  //       throw new Error('서버 응답을 처리할 수 없습니다. 관리자에게 문의해주세요.');
+  //     }
 
-      if (!response.ok) {
-        console.error('서버 오류 응답:', data);
-        throw new Error(data.error || `서버 오류가 발생했습니다. (${response.status})`);
-      }
+  //     if (!response.ok) {
+  //       console.error('서버 오류 응답:', data);
+  //       throw new Error(data.error || `서버 오류가 발생했습니다. (${response.status})`);
+  //     }
 
-      if (!data.audioUrl) {
-        console.error('오디오 URL 누락:', data);
-        throw new Error('생성된 음악을 찾을 수 없습니다.');
-      }
+  //     if (!data.audioUrl) {
+  //       console.error('오디오 URL 누락:', data);
+  //       throw new Error('생성된 음악을 찾을 수 없습니다.');
+  //     }
 
-      console.log('생성된 음악 정보:', data);
-      setAudioUrl(data.audioUrl);
-      setShowMusicModal(true);
-    } catch (error) {
-      console.error('음악 생성 오류:', error);
-      alert(error.message || '음악 생성 중 오류가 발생했습니다.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  //     console.log('생성된 음악 정보:', data);
+  //     setAudioUrl(data.audioUrl);
+  //     setShowMusicModal(true);
+  //   } catch (error) {
+  //     console.error('음악 생성 오류:', error);
+  //     alert(error.message || '음악 생성 중 오류가 발생했습니다.');
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
 
   // 페이지 전환 핸들러 추가
   const handlePageTurn = (direction) => {
@@ -370,7 +370,7 @@ export default function MainPage() {
         left: 24,
         zIndex: 1100
       }}>
-        <Link href="/intro_page">
+        <Link href="/intro">
           <button style={{
             padding: '8px 18px',
             background: '#222',
@@ -443,8 +443,8 @@ export default function MainPage() {
         />
       </Canvas>
 
-      {/* 재생 버튼 */}
-      <div className="play-button-container">
+      {/* 재생 버튼 - 일시적으로 비활성화 */}
+      {/* <div className="play-button-container">
         <button
           onClick={handlePlay}
           disabled={isGenerating || !selections.season || !selections.weather || !selections.place}
@@ -459,10 +459,10 @@ export default function MainPage() {
             '재생'
           )}
         </button>
-      </div>
+      </div> */}
 
-      {/* 음악 재생 모달 */}
-      {showMusicModal && (
+      {/* 음악 재생 모달 - 일시적으로 비활성화 */}
+      {/* {showMusicModal && (
         <MusicModal
           audioUrl={audioUrl}
           onClose={() => {
@@ -470,7 +470,7 @@ export default function MainPage() {
             setAudioUrl(null);
           }}
         />
-      )}
+      )} */}
     </div>
   );
 } 
