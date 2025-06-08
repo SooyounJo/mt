@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Scene3D from '../components/background/3d';
 import CameraControls, { useCameraControl } from '../components/camera/control';
-// import MusicModal from './MusicModal';
+// import MusicModal from '../components/MusicModal';
 import { springTransition } from '../components/albumcontrol';
 
 // 플레인 코드 매핑 수정
