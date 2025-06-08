@@ -115,16 +115,16 @@ export default function MainPage() {
     console.log('현재 선택 상태:', selections);
   }, [selections]);
 
-  // 디버깅을 위한 상태 로그 추가
-  useEffect(() => {
-    console.log('=== 재생 버튼 상태 디버깅 ===');
-    console.log('isGenerating:', isGenerating);
-    console.log('selections:', selections);
-    console.log('선택된 계절:', selections.season);
-    console.log('선택된 날씨:', selections.weather);
-    console.log('선택된 장소:', selections.place);
-    console.log('재생버튼 비활성화 여부:', isGenerating || !selections.season || !selections.weather || !selections.place);
-  }, [isGenerating, selections]);
+  // 디버깅을 위한 상태 로그 추가 - 일시적으로 비활성화
+  // useEffect(() => {
+  //   console.log('=== 재생 버튼 상태 디버깅 ===');
+  //   console.log('isGenerating:', isGenerating);
+  //   console.log('selections:', selections);
+  //   console.log('선택된 계절:', selections.season);
+  //   console.log('선택된 날씨:', selections.weather);
+  //   console.log('선택된 장소:', selections.place);
+  //   console.log('재생버튼 비활성화 여부:', isGenerating || !selections.season || !selections.weather || !selections.place);
+  // }, [isGenerating, selections]);
 
   // 디버깅을 위한 상태 로그 추가
   useEffect(() => {
@@ -311,6 +311,7 @@ export default function MainPage() {
           pointer-events: auto;
         }
         
+        /* 재생 버튼 스타일 - 일시적으로 비활성화
         .play-button-container {
           position: fixed;
           bottom: 40px;
@@ -347,6 +348,7 @@ export default function MainPage() {
           cursor: not-allowed;
           transform: none;
         }
+        */
       `}</style>
 
       {/* UI Elements */}
