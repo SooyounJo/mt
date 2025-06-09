@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Scene3D from '../components/background/3d';
 import CameraControls, { useCameraControl } from '../components/camera/control';
-// import MusicModal from '../components/MusicModal';
+import MusicInfoModal from '../components/MusicInfoModal';
 import { springTransition } from '../components/albumcontrol';
 
 // 플레인 코드 매핑 수정
@@ -39,12 +39,7 @@ export default function MainPage() {
   // 카메라 제어 훅 사용
   const cameraControl = useCameraControl();
   
-  // 전역에서 카메라 컨트롤 접근 가능하도록 설정
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.cameraControl = cameraControl;
-    }
-  }, [cameraControl]);
+
   
   // 버튼 상태 관리
   const [buttonState, setButtonState] = React.useState({
@@ -65,10 +60,10 @@ export default function MainPage() {
   // 현재 페이지 상태 추가
   const [currentPage, setCurrentPage] = useState(1);
   
-  // 음악 생성 상태 - 일시적으로 비활성화
-  // const [isGenerating, setIsGenerating] = useState(false);
-  // const [audioUrl, setAudioUrl] = useState(null);
-  // const [showMusicModal, setShowMusicModal] = useState(false);
+  // 음악 관련 상태
+  const [isLoadingMusic, setIsLoadingMusic] = useState(false);
+  const [musicData, setMusicData] = useState(null);
+  const [showMusicModal, setShowMusicModal] = useState(false);
   
   // 클라이언트 사이드에서 버튼 상태 업데이트
   React.useEffect(() => {
@@ -135,8 +130,8 @@ export default function MainPage() {
     console.log('전체 선택 상태:', selections);
   }, [selections]);
 
-  // 플레인 선택 핸들러 개선
-  const handlePlainSelect = (plainNumber) => {
+  // 플레인 선택 핸들러 개선 (useCallback으로 안정화)
+  const handlePlainSelect = useCallback((plainNumber) => {
     console.log(`\n=== 플레인 ${plainNumber}번 선택됨 ===`);
     
     const plainInfo = PLAIN_CODES[plainNumber];
@@ -164,7 +159,94 @@ export default function MainPage() {
       
       return newSelections;
     });
+  }, []);
+
+  // 음악 검색 핸들러
+  const handleMusicPlay = async () => {
+    console.log('🎵 PlayButton 클릭됨!');
+    console.log('현재 선택 상태:', selections);
+
+    if (!selections.season || !selections.weather || !selections.place) {
+      const missing = [];
+      if (!selections.season) missing.push('계절');
+      if (!selections.weather) missing.push('날씨');
+      if (!selections.place) missing.push('장소');
+      
+      alert(`먼저 다음 항목을 선택해주세요: ${missing.join(', ')}`);
+      return;
+    }
+
+    try {
+      setIsLoadingMusic(true);
+      console.log('🔍 음악 검색 시작...');
+
+      // 선택된 키워드들 생성
+      const keywords = [];
+      if (selections.season) {
+        const seasonInfo = Object.values(PLAIN_CODES).find(p => p.type === 'season' && p.code === selections.season);
+        if (seasonInfo) keywords.push(seasonInfo.name);
+      }
+      if (selections.weather) {
+        const weatherInfo = Object.values(PLAIN_CODES).find(p => p.type === 'weather' && p.code === selections.weather);
+        if (weatherInfo) keywords.push(weatherInfo.name);
+      }
+      if (selections.place) {
+        const placeInfo = Object.values(PLAIN_CODES).find(p => p.type === 'place' && p.code === selections.place);
+        if (placeInfo) keywords.push(placeInfo.name);
+      }
+
+      console.log('🎵 검색 키워드:', keywords);
+      console.log('📍 목적지:', destination);
+
+      // API 호출
+      const response = await fetch('/api/search-music', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          keywords,
+          destination: destination || '여행'
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API 응답 오류:', response.status, errorData);
+        throw new Error(errorData.message || `음악 검색 실패 (상태: ${response.status})`);
+      }
+
+      const data = await response.json();
+      console.log('🎵 검색 결과:', data);
+
+      if (!data.preview) {
+        throw new Error('재생 가능한 음악을 찾을 수 없습니다.');
+      }
+
+      setMusicData(data);
+      setShowMusicModal(true);
+
+    } catch (error) {
+      console.error('음악 검색 오류:', error);
+      const errorMessage = error.message || '음악을 불러오는 중 오류가 발생했습니다.';
+      alert(errorMessage);
+    } finally {
+      setIsLoadingMusic(false);
+    }
   };
+
+  // 전역에서 카메라 컨트롤과 플레인 선택 핸들러 접근 가능하도록 설정
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.cameraControl = cameraControl;
+      window.handlePlainSelect = handlePlainSelect;
+      
+      // Zustand 스토어와 메인 페이지 상태를 동기화
+      window.syncPlaneSelection = (planeNumber) => {
+        handlePlainSelect(planeNumber);
+      };
+    }
+  }, [cameraControl, handlePlainSelect]);
 
   // 재생 버튼 핸들러 개선 - API 관련 기능 무효화
   // const handlePlay = async () => {
@@ -442,6 +524,9 @@ export default function MainPage() {
           cameraFrom={cameraControl.cameraFrom}
           cameraTo={cameraControl.cameraTo}
           setFixedCamera={cameraControl.setFixedCamera}
+          onMusicPlay={handleMusicPlay}
+          isLoadingMusic={isLoadingMusic}
+          musicData={musicData}
         />
       </Canvas>
 
@@ -463,16 +548,17 @@ export default function MainPage() {
         </button>
       </div> */}
 
-      {/* 음악 재생 모달 - 일시적으로 비활성화 */}
-      {/* {showMusicModal && (
-        <MusicModal
-          audioUrl={audioUrl}
+      {/* 음악 정보 모달 */}
+      {showMusicModal && musicData && (
+        <MusicInfoModal
+          musicInfo={musicData}
+          isOpen={showMusicModal}
           onClose={() => {
             setShowMusicModal(false);
-            setAudioUrl(null);
+            setMusicData(null);
           }}
         />
-      )} */}
+      )}
     </div>
   );
 } 

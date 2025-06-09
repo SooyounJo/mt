@@ -151,7 +151,10 @@ export default function Scene3D({
   animationDuration, 
   cameraFrom, 
   cameraTo, 
-  setFixedCamera 
+  setFixedCamera,
+  onMusicPlay,
+  isLoadingMusic,
+  musicData
 }) {
   return (
     <>
@@ -161,7 +164,11 @@ export default function Scene3D({
       <GlassModel />
       <LPModel />
       <PinModel />
-      <Album />
+      <Album 
+        onMusicPlay={onMusicPlay}
+        isLoadingMusic={isLoadingMusic}
+        musicData={musicData}
+      />
       <DestinationText destination={destination} />
       <CustomCursor cameraView={fixedCamera} />
       

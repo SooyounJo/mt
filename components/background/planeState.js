@@ -48,6 +48,11 @@ export const usePlaneStore = create((set, get) => ({
         // 새로운 선택 추가
         newSelected.add(planeNumber);
         
+        // 메인 페이지의 선택 상태와 동기화
+        if (typeof window !== 'undefined' && window.syncPlaneSelection) {
+          window.syncPlaneSelection(planeNumber);
+        }
+        
         // 자동으로 다음 페이지로 이동
         if (page === 'PAGE1') {
           return {
