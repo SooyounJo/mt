@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useRef } from 'react';
-import { TextureLoader, LinearFilter } from 'three';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { TextureLoader, LinearFilter, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import { usePlaneStore } from '../background/planeState';
@@ -7,6 +7,21 @@ import { usePlaneStore } from '../background/planeState';
 // 텍스처 캐시 및 로더 설정
 const textureLoader = new TextureLoader();
 const textureCache = new Map();
+
+// 색상 설정
+const COLORS = {
+  default: new Color("#ffffff"),
+  selected: new Color("#ffffff"),
+  disabled: new Color("#cccccc"),
+  hover: new Color("#f5f5f5")
+};
+
+// 애니메이션 설정
+const ANIMATION_CONFIG = {
+  colorSpeed: 5,  // 색상 전환 속도
+  scaleSpeed: 8,  // 크기 전환 속도
+  hoverScale: 1.1 // 호버 시 크기
+};
 
 // 텍스처 로드 최적화 함수
 const loadTexture = (planeNumber) => {
@@ -22,7 +37,9 @@ const loadTexture = (planeNumber) => {
 export function SelectableMiniPlane({ position, planeNumber }) {
   const [hovered, setHovered] = useState(false);
   const meshRef = useRef();
+  const materialRef = useRef();
   const scaleRef = useRef(1);
+  const currentColor = useRef(new Color("#ffffff"));
 
   const { 
     toggleMiniPlane, 
@@ -38,12 +55,27 @@ export function SelectableMiniPlane({ position, planeNumber }) {
     [planeNumber]
   );
 
-  // 호버링 애니메이션
+  // 색상 및 크기 애니메이션
   useFrame((_, delta) => {
-    if (meshRef.current && isSelectable) {
-      const targetScale = hovered ? 1.1 : 1;
-      scaleRef.current += (targetScale - scaleRef.current) * 5 * delta;
-      meshRef.current.scale.set(scaleRef.current, scaleRef.current, scaleRef.current);
+    if (meshRef.current && materialRef.current) {
+      // 크기 애니메이션
+      if (isSelectable && (hovered || scaleRef.current !== 1)) {
+        const targetScale = hovered ? ANIMATION_CONFIG.hoverScale : 1;
+        const scaleDiff = targetScale - scaleRef.current;
+        
+        if (Math.abs(scaleDiff) > 0.001) {
+          scaleRef.current += scaleDiff * ANIMATION_CONFIG.scaleSpeed * delta;
+          meshRef.current.scale.set(scaleRef.current, scaleRef.current, scaleRef.current);
+        }
+      }
+
+      // 색상 애니메이션
+      const targetColor = isSelectable 
+        ? (hovered ? COLORS.hover : COLORS.default)
+        : COLORS.disabled;
+
+      currentColor.current.lerp(targetColor, ANIMATION_CONFIG.colorSpeed * delta);
+      materialRef.current.color = currentColor.current;
     }
   });
 
@@ -74,7 +106,7 @@ export function SelectableMiniPlane({ position, planeNumber }) {
       >
         <boxGeometry args={[0.85, 0.85, 0.1]} />
         <meshStandardMaterial 
-          color={isSelectable ? "#ffffff" : "#cccccc"}
+          ref={materialRef}
           map={texture}
           transparent
           side={2}
@@ -93,7 +125,7 @@ export function SelectableMiniPlane({ position, planeNumber }) {
             rotation={[-Math.PI/2, 0, 0]}
           >
             <circleGeometry args={[0.15]} />
-            <meshBasicMaterial color="#ffffff" />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
           </mesh>
           
           {/* 체크 마크 */}

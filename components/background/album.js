@@ -3,10 +3,11 @@ import { useFrame } from '@react-three/fiber';
 import { StaticAlbumSet, RotatingAlbumSet, ALBUM_SETS } from './albumset';
 import { usePageTurnAnimation } from './albumcontrol';
 import { PlayButton } from '../ui/PlayButton';
+import { LP } from './lp';
 import { TextureLoader } from 'three';
 
 // 앨범 메인 컴포넌트
-export default function Album({ onMusicPlay, isLoadingMusic, musicData }) {
+export default function Album({ onMusicPlay, isLoadingMusic, musicData, isPlaying = false }) {
   // 그룹 ref (나중에 그룹 제어용)
   const groupRef = React.useRef();
   const rightGroupRef = React.useRef(); // 첫 번째 세트: 플레인5-8 + 메인플레인
@@ -17,7 +18,6 @@ export default function Album({ onMusicPlay, isLoadingMusic, musicData }) {
   
   // 앨범 커버 텍스처 상태
   const [albumTexture, setAlbumTexture] = useState(null);
-  const albumPlaneRef = React.useRef();
 
   // 앨범 커버 텍스처 로드
   useEffect(() => {
@@ -44,13 +44,11 @@ export default function Album({ onMusicPlay, isLoadingMusic, musicData }) {
     }
   };
 
-  // 매 프레임마다 애니메이션 업데이트
+  // 매 프레임마다 애니메이션 업데이트 - 성능 최적화
   useFrame((_, delta) => {
-    updateAnimations(delta, rightGroupRef, secondGroupRef);
-    
-    // 앨범 커버 회전 애니메이션
-    if (albumPlaneRef.current && albumTexture) {
-      albumPlaneRef.current.rotation.z += delta * 0.5;
+    // 30fps로 제한하여 성능 향상
+    if (delta < 0.033) {
+      updateAnimations(delta, rightGroupRef, secondGroupRef);
     }
   });
   
@@ -73,7 +71,7 @@ export default function Album({ onMusicPlay, isLoadingMusic, musicData }) {
 
       {/* PlayButton - "플레이 백 유어 트레블 메모리즈" 근처에 배치 */}
       <PlayButton
-        position={[0, 2, 8]}
+        position={[0, -4, 13]}
         onClick={handlePlayButtonClick}
         scale={isLoadingMusic ? 0.8 : 1}
         rotation={[0, 0, 0]}
@@ -87,17 +85,8 @@ export default function Album({ onMusicPlay, isLoadingMusic, musicData }) {
         </mesh>
       )}
 
-      {/* 앨범 커버 동그란 플레인 */}
-      {albumTexture && (
-        <mesh ref={albumPlaneRef} position={[3, 0, 8]}>
-          <circleGeometry args={[1.5, 32]} />
-          <meshStandardMaterial 
-            map={albumTexture} 
-            transparent={true}
-            opacity={0.9}
-          />
-        </mesh>
-      )}
+      {/* LP 레코드 플레이어 - 앨범 커버와 함께 회전 */}
+      <LP albumTexture={albumTexture} isPlaying={isPlaying} />
     </group>
   );
 } 

@@ -41,17 +41,17 @@ export default function MainPage() {
   
 
   
-  // 버튼 상태 관리
+  // 버튼 상태 관리 최적화
   const [buttonState, setButtonState] = React.useState({
     canGoNext: true,
     canGoPrevious: false
   });
 
-  // 버튼 투명도 상태 관리
+  // 버튼 투명도 상태 메모이제이션
   const [buttonOpacity, setButtonOpacity] = React.useState(0);
   
-  // 플레인 선택 상태를 더 명확하게 관리
-  const [selections, setSelections] = useState({
+  // 플레인 선택 상태를 메모이제이션
+  const [selections, setSelections] = React.useState({
     season: null,
     weather: null,
     place: null
@@ -64,108 +64,65 @@ export default function MainPage() {
   const [isLoadingMusic, setIsLoadingMusic] = useState(false);
   const [musicData, setMusicData] = useState(null);
   const [showMusicModal, setShowMusicModal] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   
-  // 클라이언트 사이드에서 버튼 상태 업데이트
-  React.useEffect(() => {
-    const updateButtonState = () => {
-      if (typeof window !== 'undefined' && window.AlbumPageControl) {
-        setButtonState({
+  // 성능 최적화: 불필요한 상태 업데이트 방지
+  const updateButtonState = React.useCallback(() => {
+    if (typeof window !== 'undefined' && window.AlbumPageControl) {
+      setButtonState(prev => {
+        const next = {
           canGoNext: window.AlbumPageControl.canGoNext,
           canGoPrevious: window.AlbumPageControl.canGoPrevious
-        });
-      }
-    };
-    
-    // 초기 상태 설정
-    updateButtonState();
-    
-    // 주기적으로 상태 확인 (애니메이션 상태 변화 감지)
-    const interval = setInterval(updateButtonState, 100);
-    
-    return () => clearInterval(interval);
+        };
+        return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+      });
+    }
   }, []);
 
-  // 카메라 뷰 변경 감지 및 버튼 투명도 조절
+  // 버튼 상태 업데이트 최적화
   React.useEffect(() => {
+    updateButtonState();
+    const interval = setInterval(updateButtonState, 200); // 간격 늘림
+    return () => clearInterval(interval);
+  }, [updateButtonState]);
+
+  // 카메라 뷰 변경 감지 최적화
+  React.useEffect(() => {
+    let fadeInInterval;
     if (cameraControl.fixedCamera === 3) {
-      // 3번 뷰일 때 서서히 나타나게
-      const fadeIn = setInterval(() => {
+      fadeInInterval = setInterval(() => {
         setButtonOpacity(prev => {
           if (prev >= 1) {
-            clearInterval(fadeIn);
+            clearInterval(fadeInInterval);
             return 1;
           }
-          return prev + 0.05;
+          return prev + 0.1; // 스텝 크기 증가
         });
-      }, 50);
-      return () => clearInterval(fadeIn);
+      }, 100); // 간격 늘림
     } else {
-      // 다른 뷰일 때는 투명하게
       setButtonOpacity(0);
     }
+    return () => {
+      if (fadeInInterval) clearInterval(fadeInInterval);
+    };
   }, [cameraControl.fixedCamera]);
 
-  // 디버깅을 위한 상태 로그
-  useEffect(() => {
-    console.log('현재 선택 상태:', selections);
-  }, [selections]);
-
-  // 디버깅을 위한 상태 로그 추가 - 일시적으로 비활성화
-  // useEffect(() => {
-  //   console.log('=== 재생 버튼 상태 디버깅 ===');
-  //   console.log('isGenerating:', isGenerating);
-  //   console.log('selections:', selections);
-  //   console.log('선택된 계절:', selections.season);
-  //   console.log('선택된 날씨:', selections.weather);
-  //   console.log('선택된 장소:', selections.place);
-  //   console.log('재생버튼 비활성화 여부:', isGenerating || !selections.season || !selections.weather || !selections.place);
-  // }, [isGenerating, selections]);
-
-  // 디버깅을 위한 상태 로그 추가
-  useEffect(() => {
-    console.log('=== 현재 선택 상태 ===');
-    console.log('계절:', selections.season ? PLAIN_CODES[Object.keys(PLAIN_CODES).find(key => PLAIN_CODES[key].type === 'season' && PLAIN_CODES[key].code === selections.season)]?.name : '선택 안됨');
-    console.log('날씨:', selections.weather ? PLAIN_CODES[Object.keys(PLAIN_CODES).find(key => PLAIN_CODES[key].type === 'weather' && PLAIN_CODES[key].code === selections.weather)]?.name : '선택 안됨');
-    console.log('장소:', selections.place ? PLAIN_CODES[Object.keys(PLAIN_CODES).find(key => PLAIN_CODES[key].type === 'place' && PLAIN_CODES[key].code === selections.place)]?.name : '선택 안됨');
-    console.log('전체 선택 상태:', selections);
-  }, [selections]);
-
-  // 플레인 선택 핸들러 개선 (useCallback으로 안정화)
-  const handlePlainSelect = useCallback((plainNumber) => {
-    console.log(`\n=== 플레인 ${plainNumber}번 선택됨 ===`);
-    
+  // 플레인 선택 핸들러 메모이제이션
+  const handlePlainSelect = React.useCallback((plainNumber) => {
     const plainInfo = PLAIN_CODES[plainNumber];
-    if (!plainInfo) {
-      console.error('오류: 유효하지 않은 플레인 번호:', plainNumber);
-      return;
-    }
-
-    console.log('선택된 정보:', {
-      종류: plainInfo.type,
-      코드: plainInfo.code,
-      이름: plainInfo.name
-    });
+    if (!plainInfo) return;
 
     setSelections(prev => {
       const newSelections = {
         ...prev,
         [plainInfo.type]: plainInfo.code
       };
-      
-      console.log('=== 선택 후 상태 ===');
-      console.log('이전 상태:', prev);
-      console.log('새로운 상태:', newSelections);
-      console.log('활성화 조건 충족 여부:', Boolean(newSelections.season && newSelections.weather && newSelections.place));
-      
       return newSelections;
     });
   }, []);
 
-  // 음악 검색 핸들러
-  const handleMusicPlay = async () => {
-    console.log('🎵 PlayButton 클릭됨!');
-    console.log('현재 선택 상태:', selections);
-
+  // 음악 검색 핸들러 메모이제이션
+  const handleMusicPlay = React.useCallback(async () => {
     if (!selections.season || !selections.weather || !selections.place) {
       const missing = [];
       if (!selections.season) missing.push('계절');
@@ -176,24 +133,18 @@ export default function MainPage() {
       return;
     }
 
+    cameraControl.setFixedCamera(4);
+    cameraControl.setIsOrbitEnabled(false);
+
     try {
       setIsLoadingMusic(true);
-      console.log('🔍 음악 검색 시작...');
 
-      // 선택된 키워드들 생성
-      const keywords = [];
-      if (selections.season) {
-        const seasonInfo = Object.values(PLAIN_CODES).find(p => p.type === 'season' && p.code === selections.season);
-        if (seasonInfo) keywords.push(seasonInfo.name);
-      }
-      if (selections.weather) {
-        const weatherInfo = Object.values(PLAIN_CODES).find(p => p.type === 'weather' && p.code === selections.weather);
-        if (weatherInfo) keywords.push(weatherInfo.name);
-      }
-      if (selections.place) {
-        const placeInfo = Object.values(PLAIN_CODES).find(p => p.type === 'place' && p.code === selections.place);
-        if (placeInfo) keywords.push(placeInfo.name);
-      }
+      const keywords = Object.entries(selections)
+        .map(([type, code]) => {
+          const info = Object.values(PLAIN_CODES).find(p => p.type === type && p.code === code);
+          return info ? info.name : null;
+        })
+        .filter(Boolean);
 
       console.log('🎵 검색 키워드:', keywords);
       console.log('📍 목적지:', destination);
@@ -224,7 +175,11 @@ export default function MainPage() {
       }
 
       setMusicData(data);
-      setShowMusicModal(true);
+      
+      // 카메라 이동 후 모달 표시 (1초 지연)
+      setTimeout(() => {
+        setShowMusicModal(true);
+      }, 1000);
 
     } catch (error) {
       console.error('음악 검색 오류:', error);
@@ -233,7 +188,7 @@ export default function MainPage() {
     } finally {
       setIsLoadingMusic(false);
     }
-  };
+  }, [selections, destination, cameraControl]);
 
   // 전역에서 카메라 컨트롤과 플레인 선택 핸들러 접근 가능하도록 설정
   React.useEffect(() => {
@@ -247,94 +202,6 @@ export default function MainPage() {
       };
     }
   }, [cameraControl, handlePlainSelect]);
-
-  // 재생 버튼 핸들러 개선 - API 관련 기능 무효화
-  // const handlePlay = async () => {
-  //   console.log('=== 재생 버튼 클릭 ===');
-  //   console.log('현재 선택 상태:', {
-  //     계절: selections.season,
-  //     날씨: selections.weather,
-  //     장소: selections.place
-  //   });
-
-  //   if (!selections.season || !selections.weather || !selections.place) {
-  //     const missing = [];
-  //     if (!selections.season) missing.push('계절');
-  //     if (!selections.weather) missing.push('날씨');
-  //     if (!selections.place) missing.push('장소');
-      
-  //     alert(`다음 항목을 선택해주세요: ${missing.join(', ')}`);
-  //     return;
-  //   }
-
-  //   try {
-  //     setIsGenerating(true);
-  //     console.log('음악 생성 시작');
-      
-  //     await springTransition();
-
-  //     const response = await fetch('/api/generate-music', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json'
-  //       },
-  //       body: JSON.stringify({
-  //         seasonCode: selections.season,
-  //         weatherCode: selections.weather,
-  //         placeCode: selections.place
-  //       })
-  //     });
-
-  //     let data;
-  //     const contentType = response.headers.get('content-type');
-      
-  //     try {
-  //       if (contentType && contentType.includes('application/json')) {
-  //         data = await response.json();
-  //       } else {
-  //         const text = await response.text();
-  //         console.log('서버 응답 (raw):', text);
-  //         try {
-  //           data = JSON.parse(text);
-  //         } catch (parseError) {
-  //           console.error('JSON 파싱 오류:', parseError);
-  //           throw new Error('서버 응답을 처리할 수 없습니다. 관리자에게 문의해주세요.');
-  //         }
-  //       }
-  //     } catch (parseError) {
-  //       console.error('응답 처리 오류:', parseError);
-  //       if (response.status === 402) {
-  //         throw new Error('크레딧이 부족합니다. 크레딧을 충전해주세요.');
-  //       } else if (response.status === 429) {
-  //         throw new Error('너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
-  //       } else if (response.status === 401) {
-  //         throw new Error('API 키가 유효하지 않습니다. 관리자에게 문의해주세요.');
-  //       } else if (response.status === 403) {
-  //         throw new Error('크레딧이 부족하거나 API 접근 권한이 없습니다.');
-  //       }
-  //       throw new Error('서버 응답을 처리할 수 없습니다. 관리자에게 문의해주세요.');
-  //     }
-
-  //     if (!response.ok) {
-  //       console.error('서버 오류 응답:', data);
-  //       throw new Error(data.error || `서버 오류가 발생했습니다. (${response.status})`);
-  //     }
-
-  //     if (!data.audioUrl) {
-  //       console.error('오디오 URL 누락:', data);
-  //       throw new Error('생성된 음악을 찾을 수 없습니다.');
-  //     }
-
-  //     console.log('생성된 음악 정보:', data);
-  //     setAudioUrl(data.audioUrl);
-  //     setShowMusicModal(true);
-  //   } catch (error) {
-  //     console.error('음악 생성 오류:', error);
-  //     alert(error.message || '음악 생성 중 오류가 발생했습니다.');
-  //   } finally {
-  //     setIsGenerating(false);
-  //   }
-  // };
 
   // 페이지 전환 핸들러 추가
   const handlePageTurn = (direction) => {
@@ -511,8 +378,18 @@ export default function MainPage() {
         )}
       </div>
 
-      {/* 통합된 Canvas */}
-      <Canvas camera={{ position: [6, 0, 15], fov: 35 }} shadows>
+      {/* 통합된 Canvas - 성능 최적화 */}
+      <Canvas 
+        camera={{ position: [6, 0, 15], fov: 35 }} 
+        shadows={false}
+        dpr={[1, 1.5]}
+        performance={{ min: 0.5 }}
+        gl={{ 
+          antialias: false,
+          alpha: false,
+          powerPreference: "high-performance"
+        }}
+      >
         {/* Scene3D */}
         <Scene3D
           destination={destination}
@@ -527,26 +404,9 @@ export default function MainPage() {
           onMusicPlay={handleMusicPlay}
           isLoadingMusic={isLoadingMusic}
           musicData={musicData}
+          isPlaying={isPlaying}
         />
       </Canvas>
-
-      {/* 재생 버튼 - 일시적으로 비활성화 */}
-      {/* <div className="play-button-container">
-        <button
-          onClick={handlePlay}
-          disabled={isGenerating || !selections.season || !selections.weather || !selections.place}
-          className="play-button"
-        >
-          {isGenerating ? '음악 생성 중...' : (
-            !selections.season || !selections.weather || !selections.place ? 
-            `선택 필요:\n${!selections.season ? '계절 ' : ''}${!selections.weather ? '날씨 ' : ''}${!selections.place ? '장소' : ''}`
-              .trim()
-              .split('\n')
-              .join('\n') : 
-            '재생'
-          )}
-        </button>
-      </div> */}
 
       {/* 음악 정보 모달 */}
       {showMusicModal && musicData && (
@@ -556,7 +416,9 @@ export default function MainPage() {
           onClose={() => {
             setShowMusicModal(false);
             setMusicData(null);
+            setIsPlaying(false);
           }}
+          onPlayStatusChange={setIsPlaying}
         />
       )}
     </div>

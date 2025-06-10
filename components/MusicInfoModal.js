@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from '../styles/MusicInfoModal.module.css';
 
-const MusicInfoModal = ({ musicInfo, isOpen, onClose }) => {
+const MusicInfoModal = ({ musicInfo, isOpen, onClose, onPlayStatusChange }) => {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -16,7 +16,10 @@ const MusicInfoModal = ({ musicInfo, isOpen, onClose }) => {
       
       audio.addEventListener('timeupdate', updateTime);
       audio.addEventListener('loadedmetadata', updateDuration);
-      audio.addEventListener('ended', () => setIsPlaying(false));
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false);
+        onPlayStatusChange?.(false);
+      });
       
       return () => {
         audio.removeEventListener('timeupdate', updateTime);
@@ -30,10 +33,13 @@ const MusicInfoModal = ({ musicInfo, isOpen, onClose }) => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
+        onPlayStatusChange?.(false);
       } else {
         audioRef.current.play();
+        setIsPlaying(true);
+        onPlayStatusChange?.(true);
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -78,19 +84,21 @@ const MusicInfoModal = ({ musicInfo, isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* 음악 정보 */}
-          <div className={styles.musicInfo}>
-            <h2 className={styles.title}>{musicInfo.title}</h2>
-            <p className={styles.artist}>{musicInfo.artist}</p>
-            <p className={styles.album}>{musicInfo.album}</p>
-            
-            {/* 검색 키워드 */}
-            {musicInfo.searchKeywords && (
-              <p className={styles.keywords}>
-                키워드: {musicInfo.searchKeywords}
-              </p>
-            )}
-          </div>
+          {/* 오른쪽 영역: 음악 정보 + 플레이어 */}
+          <div className={styles.rightSection}>
+            {/* 음악 정보 */}
+            <div className={styles.musicInfo}>
+              <h2 className={styles.title}>{musicInfo.title}</h2>
+              <p className={styles.artist}>{musicInfo.artist}</p>
+              <p className={styles.album}>{musicInfo.album}</p>
+              
+              {/* 검색 키워드 */}
+              {musicInfo.searchKeywords && (
+                <p className={styles.keywords}>
+                  키워드: {musicInfo.searchKeywords}
+                </p>
+              )}
+            </div>
 
           {/* 오디오 플레이어 */}
           <div className={styles.audioPlayer}>
@@ -119,10 +127,11 @@ const MusicInfoModal = ({ musicInfo, isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* 30초 미리듣기 안내 */}
-          <p className={styles.previewNotice}>
-            🎵 30초 미리듣기 제공
-          </p>
+            {/* 30초 미리듣기 안내 */}
+            <p className={styles.previewNotice}>
+              🎵 30초 미리듣기 제공
+            </p>
+          </div>
         </div>
       </div>
     </div>

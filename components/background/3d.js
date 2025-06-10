@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useGLTF, Text3D, OrbitControls } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { TextureLoader } from 'three';
+import { TextureLoader, MeshStandardMaterial, MeshBasicMaterial } from 'three';
 import * as THREE from 'three';
 import SceneLights from '../lights/lights';
 import Album from './album';
@@ -9,64 +9,116 @@ import FixedCameraView from '../camera/camera';
 import LPModel from './lp';
 import { CustomCursor } from '../cursor';
 
+// 공통 머티리얼 메모이제이션
+const glassMaterial = new MeshStandardMaterial({
+  color: 0xffffff,
+  metalness: 0.1,
+  roughness: 0.1,
+  transparent: true,
+  opacity: 0.2,
+  envMapIntensity: 0.3
+});
+
 // 3D 모델 컴포넌트들
 function FullTestModel() {
   const { scene } = useGLTF('/3d/background/fin.glb');
+  
+  // 성능 최적화: 메시 최적화
+  useEffect(() => {
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = false;
+        child.receiveShadow = false;
+        
+        // 머티리얼 최적화
+        if (child.material) {
+          child.material.envMapIntensity = 0.5;
+          child.material.needsUpdate = false;
+        }
+        
+        // 지오메트리 최적화
+        if (child.geometry) {
+          child.geometry.computeBoundingSphere();
+          child.geometry.computeBoundingBox();
+        }
+      }
+    });
+  }, [scene]);
+  
   return (
     <primitive 
       object={scene} 
       position={[0, 0, 0]}
       scale={10}
-      receiveShadow
-      castShadow
+      frustumCulled={true}
     />
   );
 }
 
 function GlassModel() {
   const { scene } = useGLTF('/3d/background/glass.glb');
-  React.useEffect(() => {
+  
+  useEffect(() => {
     scene.traverse((child) => {
-      if (child.isMesh && child.name && child.name.toLowerCase().includes('glass')) {
-        child.material = new THREE.MeshPhysicalMaterial({
-          color: 0xffffff,
-          metalness: 0.1,
-          roughness: 0.1,
-          transmission: 0.95,  // 빛 투과율 증가
-          thickness: 0.2,      // 두께 감소
-          ior: 1.2,           // 굴절률 감소
-          clearcoat: 0.1,     // 코팅 효과 감소
-          clearcoatRoughness: 0.1,
-          envMapIntensity: 0.5,
-          transparent: true,
-          opacity: 0.1        // 90% 투명도
-        });
+      if (child.isMesh) {
+        child.castShadow = false;
+        child.receiveShadow = false;
+        
+        if (child.name && child.name.toLowerCase().includes('glass')) {
+          child.material = glassMaterial;
+        }
+        
+        // 지오메트리 최적화
+        if (child.geometry) {
+          child.geometry.computeBoundingSphere();
+          child.geometry.computeBoundingBox();
+        }
       }
     });
   }, [scene]);
+  
   return (
     <primitive 
       object={scene} 
       position={[0, 0, 0]}
       scale={10}
-      receiveShadow
-      castShadow
+      frustumCulled={true}
     />
   );
 }
 
 function BackgroundPlane({ url = "/2d/night3.jpg" }) {
-  const texture = React.useMemo(() => new TextureLoader().load(url), [url]);
+  // 텍스처 메모이제이션
+  const texture = useMemo(() => {
+    const tex = new TextureLoader().load(url);
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
+    return tex;
+  }, [url]);
+
+  // 메시 메모이제이션
+  const geometry = useMemo(() => new THREE.PlaneGeometry(60, 30), []);
+  const material = useMemo(() => new MeshBasicMaterial({ 
+    map: texture, 
+    toneMapped: false, 
+    color: "#888" 
+  }), [texture]);
+
   return (
-    <mesh position={[0, -2, -10]} rotation={[0, 0, 0]} receiveShadow>
-      <planeGeometry args={[60, 30]} />
-      <meshBasicMaterial map={texture} toneMapped={false} color="#888" />
-    </mesh>
+    <mesh 
+      position={[0, -2, -10]} 
+      rotation={[0, 0, 0]} 
+      receiveShadow={false}
+      geometry={geometry}
+      material={material}
+      frustumCulled={true}
+    />
   );
 }
 
 // 3D 텍스트 컴포넌트
-function DestinationText({ destination }) {
+const DestinationText = React.memo(function DestinationText({ destination }) {
   if (!destination) return null;
   
   return (
@@ -74,54 +126,78 @@ function DestinationText({ destination }) {
       font="/font/digi.json"
       size={0.6}
       height={0.1}
-      curveSegments={16}
+      curveSegments={12}
       bevelEnabled
       bevelThickness={0.04}
       bevelSize={0.02}
       bevelOffset={0}
-      bevelSegments={4}
+      bevelSegments={3}
       position={[-6.3, -5, 10.4]}
-      castShadow
-      receiveShadow
+      castShadow={false}
+      receiveShadow={false}
     >
       {destination}
-      <meshPhysicalMaterial color="#fff" metalness={0.2} roughness={0.3} />
+      <meshPhysicalMaterial 
+        color="#fff" 
+        metalness={0.2} 
+        roughness={0.3}
+        envMapIntensity={0.5}
+      />
     </Text3D>
   );
-}
+});
 
 // Pin 모델 컴포넌트
-function PinModel() {
+const PinModel = React.memo(function PinModel() {
   const { scene } = useGLTF('/3d/background/pin2.glb');
   const [rotation, setRotation] = React.useState([0, 0, 0]);
   const [shouldAnimate, setShouldAnimate] = React.useState(false);
+  const animationCompleted = React.useRef(false);
+  const lastTime = React.useRef(0);
 
-  // 카메라 뷰 변경 감지 및 애니메이션 시작
-  React.useEffect(() => {
+  useEffect(() => {
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = false;
+        child.receiveShadow = false;
+        
+        // 지오메트리 최적화
+        if (child.geometry) {
+          child.geometry.computeBoundingSphere();
+          child.geometry.computeBoundingBox();
+        }
+      }
+    });
+  }, [scene]);
+
+  useEffect(() => {
     if (window.cameraControl?.camera) {
       const originalCallback = window.cameraControl.setFixedCamera;
       window.cameraControl.setFixedCamera = (view) => {
         originalCallback(view);
-        if (view === 5) { // 카메라가 5번 뷰로 이동했을 때
-          setTimeout(() => {
-            setShouldAnimate(true);
-          }, 2000); // 2초 후 애니메이션 시작
+        if (view === 5 && !animationCompleted.current) {
+          setTimeout(() => setShouldAnimate(true), 2000);
         }
       };
     }
   }, []);
 
-  // 회전 애니메이션
-  useFrame((state, delta) => {
-    if (shouldAnimate) {
+  // 애니메이션 최적화
+  useFrame((state) => {
+    if (shouldAnimate && !animationCompleted.current) {
+      const currentTime = state.clock.getElapsedTime();
+      const deltaTime = currentTime - lastTime.current;
+      lastTime.current = currentTime;
+
       const targetRotation = -Math.PI/6;
       const currentRotation = rotation[1];
-      const step = delta * 2; // 회전 속도 조절
+      const step = deltaTime * 2;
       
       if (Math.abs(currentRotation - targetRotation) > 0.01) {
         setRotation([0, currentRotation + (targetRotation - currentRotation) * step, 0]);
       } else {
         setRotation([0, targetRotation, 0]);
+        animationCompleted.current = true;
       }
     }
   });
@@ -132,17 +208,18 @@ function PinModel() {
       position={[-3.6, -3.9, 6.8]}
       rotation={rotation}
       scale={10}
-      receiveShadow
-      castShadow
+      frustumCulled={true}
     />
   );
-}
+});
 
 // GLB 파일 프리로드
 useGLTF.preload('/3d/background/pin2.glb');
+useGLTF.preload('/3d/background/fin.glb');
+useGLTF.preload('/3d/background/glass.glb');
 
 // 메인 3D 씬 컴포넌트
-export default function Scene3D({ 
+const Scene3D = React.memo(function Scene3D({ 
   destination, 
   isOrbitEnabled, 
   fixedCamera, 
@@ -154,7 +231,8 @@ export default function Scene3D({
   setFixedCamera,
   onMusicPlay,
   isLoadingMusic,
-  musicData
+  musicData,
+  isPlaying
 }) {
   return (
     <>
@@ -168,6 +246,7 @@ export default function Scene3D({
         onMusicPlay={onMusicPlay}
         isLoadingMusic={isLoadingMusic}
         musicData={musicData}
+        isPlaying={isPlaying}
       />
       <DestinationText destination={destination} />
       <CustomCursor cameraView={fixedCamera} />
@@ -201,4 +280,6 @@ export default function Scene3D({
       )}
     </>
   );
-} 
+});
+
+export default Scene3D; 
