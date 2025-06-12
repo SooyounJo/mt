@@ -1,62 +1,35 @@
 import React, { useRef, useState } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { useGLTF } from '@react-three/drei';
-import { Environment } from '@react-three/drei';
-
-function BlurredFullModel() {
-  const { scene } = useGLTF('/3d/background/test1glb.glb');
-  return (
-    <primitive 
-      object={scene} 
-      position={[-1.7, -4.5, 0.4]}
-      rotation={[0, Math.PI / 2, 0]}
-      scale={25}
-      receiveShadow
-      castShadow
-    />
-  );
-}
-
-function CameraAngle() {
-  const { camera } = useThree();
-  React.useEffect(() => {
-    camera.position.set(19, 0, 0);
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
-  }, [camera]);
-  return null;
-}
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 
 function Particles({ count = 40 }) {
-  const meshRefs = React.useRef([]);
+  const meshRefs = useRef([]);
   // 파티클의 초기 위치와 속도
-  const [particles] = React.useState(() =>
+  const [particles] = useState(() =>
     Array.from({ length: count }, () => ({
       position: [
-        (Math.random() - 0.5) * 30,
-        Math.random() * 12 - 4,
-        (Math.random() - 0.5) * 30
+        (Math.random() - 0.5) * 20, // -10~10
+        Math.random() * 8 - 2,      // -2~6
+        (Math.random() - 0.5) * 20  // -10~10
       ],
       speed: [
         (Math.random() - 0.5) * 0.01,
         (Math.random() - 0.5) * 0.01,
         (Math.random() - 0.5) * 0.01
       ],
-      opacity: 0.5 + Math.random() * 0.3
+      opacity: 0.7 + Math.random() * 0.2 // 0.7~0.9로 더 밝게
     }))
   );
 
   useFrame(() => {
     meshRefs.current.forEach((ref, i) => {
       if (ref) {
-        // 먼지가 천천히 움직이도록 위치 업데이트
         ref.position.x += particles[i].speed[0];
         ref.position.y += particles[i].speed[1];
         ref.position.z += particles[i].speed[2];
-        // 화면을 벗어나면 다시 랜덤 위치로
-        if (ref.position.y < -6 || ref.position.y > 10) {
-          ref.position.y = Math.random() * 12 - 4;
+        if (ref.position.y < -3 || ref.position.y > 7) {
+          ref.position.y = Math.random() * 8 - 2;
         }
       }
     });
@@ -70,16 +43,56 @@ function Particles({ count = 40 }) {
           ref={el => (meshRefs.current[i] = el)}
           position={p.position}
         >
-          <sphereGeometry args={[0.04, 8, 8]} />
-          <meshBasicMaterial
+          <sphereGeometry args={[0.045, 16, 16]} />
+          <meshPhysicalMaterial
             color="#fff"
             transparent
             opacity={p.opacity}
+            emissive="#ffffff"
+            emissiveIntensity={2.5}
+            metalness={0.7}
+            roughness={0.15}
+            thickness={1.2}
+            transmission={0.7}
+            ior={1.2}
+            attenuationColor="#ffffff"
+            attenuationDistance={0.25}
           />
         </mesh>
       ))}
     </group>
   );
+}
+
+function LPModel() {
+  const { scene } = useGLTF('/3d/background/lp.glb');
+  const ref = useRef();
+  useFrame(() => {
+    if (ref.current) {
+      ref.current.rotation.y += 0.002; // 훨씬 더 느리게 회전
+    }
+  });
+  return (
+    <primitive 
+      ref={ref}
+      object={scene} 
+      position={[0, -0.7, 0]}
+      rotation={[Math.PI / 2 - Math.PI / 9, 0, 0]}
+      scale={16}
+      receiveShadow
+      castShadow
+    />
+  );
+}
+
+function CameraAngle() {
+  const { camera } = useThree();
+  React.useEffect(() => {
+    camera.position.set(0, 0, 13);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+  }, [camera]);
+  return null;
 }
 
 export default function First({ onSubmit }) {
@@ -97,26 +110,26 @@ export default function First({ onSubmit }) {
     <div style={{ position: 'fixed', width: '100vw', height: '100vh', zIndex: 1000 }}>
       {/* 3D 배경 */}
       <Canvas
-        camera={{ position: [0, 0, -15], fov: 20 }}
+        camera={{ position: [0, 0, 13], fov: 20 }}
         style={{ width: '100vw', height: '100vh', background: 'transparent' }}
         gl={{ antialias: true, alpha: true }}
         shadows
       >
         <CameraAngle />
-        <ambientLight intensity={0.2} />
+        <ambientLight intensity={0.7} />
         <directionalLight 
-          position={[-5, 10, -10]}
-          intensity={2.5}
+          position={[-18, 10, -8]}
+          intensity={10}
           castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-bias={-0.001}
-          shadow-normalBias={0.1}
         />
-        <BlurredFullModel />
-        <Particles count={80} />
+        <pointLight 
+          position={[12, -8, 10]}
+          intensity={2}
+        />
+        <Particles count={40} />
+        <LPModel />
         <EffectComposer>
-          <Bloom luminanceThreshold={0} luminanceSmoothing={0.9} height={300} />
+          <Bloom luminanceThreshold={0} intensity={1.2} radius={0.8} />
         </EffectComposer>
       </Canvas>
       
@@ -134,7 +147,7 @@ export default function First({ onSubmit }) {
         justifyContent: 'center',
         zIndex: 2000
       }}>
-        <h1 style={{marginBottom: 16, color: '#fff', fontWeight: 700, fontSize: 128, letterSpacing: 1, textAlign: 'center'}}>memory tone</h1>
+        <h1 style={{marginBottom: 128, marginTop: -120, color: '#fff', fontWeight: 700, fontSize: 128, letterSpacing: 1, textAlign: 'center'}}>memory tone</h1>
         <h3 style={{marginBottom: 32, color: '#fff', fontWeight: 600, fontSize: 18, textAlign: 'center'}}>여행을 기록하기 시작합니다</h3>
         <form onSubmit={handleSubmit} style={{
           background: 'rgba(255,255,255,0.08)',
