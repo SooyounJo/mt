@@ -249,7 +249,8 @@ const Scene3D = React.memo(function Scene3D({
         isPlaying={isPlaying}
       />
       <DestinationText destination={destination} />
-      <CustomCursor cameraView={fixedCamera} />
+      {/* 커서: 카메라 애니메이션 중에는 숨김 */}
+      {!(animatingCamera.current) && <CustomCursor cameraView={fixedCamera} />}
       
       {/* 올빗 컨트롤은 고정 카메라가 아닐 때만 활성화 */}
       {(!fixedCamera) && <OrbitControls enabled={isOrbitEnabled} enableZoom={isOrbitEnabled} enablePan={isOrbitEnabled} />}

@@ -19,6 +19,9 @@ export default function Album({ onMusicPlay, isLoadingMusic, musicData, isPlayin
   // 앨범 커버 텍스처 상태
   const [albumTexture, setAlbumTexture] = useState(null);
 
+  // 플레이 버튼 토글 상태
+  const [playToggled, setPlayToggled] = useState(false);
+
   // 앨범 커버 텍스처 로드
   useEffect(() => {
     if (musicData?.cover_big) {
@@ -38,7 +41,7 @@ export default function Album({ onMusicPlay, isLoadingMusic, musicData, isPlayin
   }, [musicData]);
 
   const handlePlayButtonClick = () => {
-    console.log('PlayButton 클릭됨!');
+    setPlayToggled((prev) => !prev);
     if (onMusicPlay) {
       onMusicPlay();
     }
@@ -69,13 +72,15 @@ export default function Album({ onMusicPlay, isLoadingMusic, musicData, isPlayin
         {...ALBUM_SETS.rotatingSet2}
       />
 
-      {/* PlayButton - "플레이 백 유어 트레블 메모리즈" 근처에 배치 */}
-      <PlayButton
-        position={[0, -4, 13]}
-        onClick={handlePlayButtonClick}
-        scale={isLoadingMusic ? 0.8 : 1}
-        rotation={[0, 0, 0]}
-      />
+      {/* PlayButton - 토글 효과 및 뒤로 이동 */}
+      {musicData && (
+        <PlayButton
+          position={[-2, -4, 11]}
+          onClick={handlePlayButtonClick}
+          scale={playToggled ? 1.5 : 1}
+          rotation={[-0.3, 0, 0]}
+        />
+      )}
 
       {/* 로딩 표시 */}
       {isLoadingMusic && (

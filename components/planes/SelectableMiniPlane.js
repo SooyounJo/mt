@@ -89,7 +89,7 @@ export function SelectableMiniPlane({ position, planeNumber }) {
     <group position={position}>
       <mesh 
         ref={meshRef}
-        rotation={[-Math.PI/2, 0, 0]}
+        rotation={[-Math.PI/2, 0, Math.sin(planeNumber) * 0.08 + (planeNumber % 3) * 0.08]}
         onPointerOver={() => {
           if (isSelectable) {
             setHovered(true);
@@ -118,28 +118,16 @@ export function SelectableMiniPlane({ position, planeNumber }) {
       
       {/* 체크 표시 */}
       {isSelected && (
-        <>
-          {/* 체크 마크 배경 */}
-          <mesh
-            position={[0.25, 0.05, 0.25]}
-            rotation={[-Math.PI/2, 0, 0]}
-          >
-            <circleGeometry args={[0.15]} />
-            <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
-          </mesh>
-          
-          {/* 체크 마크 */}
-          <Text
-            position={[0.25, 0.06, 0.25]}
-            rotation={[-Math.PI/2, 0, 0]}
-            fontSize={0.2}
-            color="#ff0000"
-            anchorX="center"
-            anchorY="middle"
-          >
-            ✓
-          </Text>
-        </>
+        <Text
+          position={[0, 0.06, 0]}
+          rotation={[-Math.PI/2, 0, 0]}
+          fontSize={0.35}
+          color="#ff0000"
+          anchorX="center"
+          anchorY="middle"
+        >
+          ✓
+        </Text>
       )}
     </group>
   );

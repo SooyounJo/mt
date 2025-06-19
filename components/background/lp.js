@@ -5,7 +5,7 @@ import { TextureLoader } from 'three';
 
 // LP 컴포넌트 - 앨범 커버와 함께 회전
 export function LP({ albumTexture, isPlaying = false }) {
-  const { scene } = useGLTF('/3d/background/lp5.glb');
+  const { scene } = useGLTF('/3d/background/lp.glb');
   const lpGroupRef = useRef();
   const albumPlaneRef = useRef();
 
@@ -38,6 +38,6 @@ export function LP({ albumTexture, isPlaying = false }) {
 }
 
 // GLB 파일 프리로드
-useGLTF.preload('/3d/background/lp5.glb');
+useGLTF.preload('/3d/background/lp.glb');
 
 export default LP; 

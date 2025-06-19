@@ -398,7 +398,14 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
                 // 음악 재생 및 모달 표시
                 if (result.audioUrl) {
                   const audio = new Audio(result.audioUrl);
+                  // API 음성 시작 이벤트 발생
+                  window.dispatchEvent(new Event('apiAudioStart'));
                   audio.play();
+
+                  audio.onended = () => {
+                    // API 음성 종료 이벤트 발생
+                    window.dispatchEvent(new Event('apiAudioEnd'));
+                  };
                   
                   // 모달 표시 (전역 이벤트 발생)
                   window.dispatchEvent(new CustomEvent('showMusicModal', {

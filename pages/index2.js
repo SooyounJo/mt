@@ -12,10 +12,10 @@ import ClickHereText from '../components/ClickHereText';
 // 플레인 코드 매핑 수정
 const PLAIN_CODES = {
   // 계절 플레인
-  1: { type: 'season', code: 'fall', name: '가을' },    
-  2: { type: 'season', code: 'spring', name: '봄' },  
-  3: { type: 'season', code: 'winter', name: '겨울' },  
-  4: { type: 'season', code: 'summer', name: '여름' },  
+  1: { type: 'season', code: 'spring', name: '가을' },    
+  2: { type: 'season', code: 'summer', name: '봄' },  
+  3: { type: 'season', code: 'fall', name: '겨울' },  
+  4: { type: 'season', code: 'winter', name: '여름' },  
   
   // 날씨 플레인
   5: { type: 'weather', code: 'snow', name: '눈' },   
@@ -24,9 +24,9 @@ const PLAIN_CODES = {
   8: { type: 'weather', code: 'rain', name: '비' },   
   
   // 장소 플레인
-  9: { type: 'place', code: 'city', name: '도시' },      
+  9: { type: 'place', code: 'citypop', name: '도시' },      
   10: { type: 'place', code: 'nature', name: '자연' },   
-  11: { type: 'place', code: 'beach', name: '해변' },    
+  11: { type: 'place', code: 'tropical', name: '해변' },    
   12: { type: 'place', code: 'historical', name: '역사' },
   13: { type: 'place', code: 'religious', name: '종교' }, 
   14: { type: 'place', code: 'desert', name: '사막' },    
@@ -41,11 +41,19 @@ export default function MainPage() {
   // 카메라 제어 훅 사용
   const cameraControl = useCameraControl();
   
-  // 입장 시 카메라 1번 뷰로 고정
+  // 3번 카메라 position 조정 상태
+  const [cam3Pos, setCam3Pos] = useState({ x: -3.5, y: 16, z: 22 });
+
+  // 입장 시 카메라 1번으로 고정
   React.useEffect(() => {
     cameraControl.setFixedCamera(1);
     cameraControl.setIsOrbitEnabled(false);
   }, []);
+
+  // 3번 뷰 position을 cameraControl에 반영 (FixedCameraView에서 읽을 수 있도록 window에 저장)
+  useEffect(() => {
+    window._customCam3Pos = cam3Pos;
+  }, [cam3Pos]);
 
   // 버튼 상태 관리 최적화
   const [buttonState, setButtonState] = React.useState({
@@ -156,10 +164,11 @@ export default function MainPage() {
     }
   };
 
+  // click here 클릭 시 카메라 시퀀스 실행
   const handleTextClick = () => {
     setShowText(false);
     setIsTransitioning(true);
-    cameraControl.setIsOrbitEnabled(false);
+    cameraControl.setIsOrbitEnabled(false); // 올빗 컨트롤 비활성화
     cameraControl.startCameraSequence();
     setTimeout(() => {
       setCurrentView(2);
@@ -396,7 +405,8 @@ export default function MainPage() {
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} />
             <ClickHereText onClick={handleTextClick} />
-            <OrbitControls enableZoom={false} enablePan={false} />
+            {/* Click Here 단계에서만 OrbitControls 활성화 */}
+            {showText && <OrbitControls enableZoom={false} enablePan={false} />}
           </Canvas>
         </div>
       )}
@@ -410,6 +420,32 @@ export default function MainPage() {
       <div className="absolute bottom-0 left-0 right-0 p-4">
         {/* ... other UI elements ... */}
       </div>
+
+      {/* 3번 카메라 position 조정 슬라이더 */}
+      {cameraControl.fixedCamera === 3 && (
+        <div style={{
+          position: 'absolute',
+          top: 80,
+          right: 40,
+          zIndex: 2000,
+          background: 'rgba(0,0,0,0.7)',
+          padding: 16,
+          borderRadius: 12,
+          color: '#fff',
+          width: 260
+        }}>
+          <div style={{marginBottom: 8, fontWeight: 'bold'}}>카메라 3번 위치 조정</div>
+          <div style={{marginBottom: 8}}>
+            X: <input type="range" min="-20" max="20" step="0.1" value={cam3Pos.x} onChange={e => setCam3Pos(pos => ({...pos, x: parseFloat(e.target.value)}))} /> {cam3Pos.x}
+          </div>
+          <div style={{marginBottom: 8}}>
+            Y: <input type="range" min="0" max="40" step="0.1" value={cam3Pos.y} onChange={e => setCam3Pos(pos => ({...pos, y: parseFloat(e.target.value)}))} /> {cam3Pos.y}
+          </div>
+          <div>
+            Z: <input type="range" min="0" max="40" step="0.1" value={cam3Pos.z} onChange={e => setCam3Pos(pos => ({...pos, z: parseFloat(e.target.value)}))} /> {cam3Pos.z}
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

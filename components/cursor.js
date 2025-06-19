@@ -3,21 +3,12 @@ import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// 빨간 플라스틱 공 커서 컴포넌트
-function RedBallCursor({ position }) {
+// 평면 커서 컴포넌트 (흰색)
+function WhiteFlatCursor({ position }) {
   return (
     <mesh position={position}>
-      <sphereGeometry args={[0.06, 32, 32]} />
-      <meshPhysicalMaterial
-        color="#ff0000"
-        metalness={0.1}
-        roughness={0.3}
-        clearcoat={1}
-        clearcoatRoughness={0.1}
-        transmission={0}
-        thickness={0.5}
-        ior={1.5}
-      />
+      <circleGeometry args={[0.09, 24]} />
+      <meshBasicMaterial color="#fff" transparent opacity={0.9} />
     </mesh>
   );
 }
@@ -73,24 +64,9 @@ export function CustomCursor({ cameraView }) {
 
   // 항상 커서를 렌더링하되, 카메라 뷰에 따라 다른 커서 표시
   return (
-    <>
-      {isView3 ? (
-        <group 
-          position={[cursorPosition.x, cursorPosition.y, cursorPosition.z]}
-          ref={groupRef}
-        >
-          <primitive 
-            object={scene}
-            castShadow
-            receiveShadow
-          />
-        </group>
-      ) : (
-        <RedBallCursor 
-          position={[cursorPosition.x, cursorPosition.y, cursorPosition.z]} 
-        />
-      )}
-    </>
+    <WhiteFlatCursor 
+      position={[cursorPosition.x, cursorPosition.y, cursorPosition.z]} 
+    />
   );
 }
 

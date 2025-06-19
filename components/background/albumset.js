@@ -293,8 +293,12 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
 
   const mainPlaneProps = {
     position: [1.6 - pivotPoint[0], -5.54 - pivotPoint[1], 11.6 - pivotPoint[2]],
-    rotation: [Math.PI/2, 0, 0]
+    rotation: [-Math.PI/2, 0, 0]
   };
+
+  // p2, p3 텍스처 불러오기
+  const p2Texture = useLoader(TextureLoader, '/2d/mini/p2.png');
+  const p3Texture = useLoader(TextureLoader, '/2d/mini/p3.png');
 
   return (
     <group ref={groupRef} position={pivotPoint}>
@@ -312,7 +316,14 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
 
       <mesh {...mainPlaneProps}>
         <boxGeometry args={[2.8, 3.6, 0.1]} />
-        <meshStandardMaterial color="#ffffff" />
+        {[
+          <meshStandardMaterial key={0} color="#fff" />,
+          <meshStandardMaterial key={1} color="#fff" />,
+          <meshStandardMaterial key={2} map={p3Texture} />,
+          <meshStandardMaterial key={3} color="#fff" />,
+          <meshStandardMaterial key={4} color="#fff" />,
+          <meshStandardMaterial key={5} color="#fff" />
+        ]}
       </mesh>
 
       {isSecondSet && (
@@ -329,12 +340,12 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
 
           {animationStep >= 2 && (
             <>
-            <PlayButton
+            {/* <PlayButton
                 position={[1 - pivotPoint[0], -6.2 - pivotPoint[1], 11.5 - pivotPoint[2]]}
                 onClick={handlePlayClick}
               scale={1.2}
               rotation={[0.5, 0, 5.2]}
-            />
+            /> */}
               <Text3D
                 font="/font/digi.json"
                 position={[0.5 - pivotPoint[0], -8.2 - pivotPoint[1], 11.5 - pivotPoint[2]]}
@@ -403,6 +414,9 @@ export function RotatingAlbumSet({ groupRef, pivotPoint, frontPlanes, backPlanes
 export function StaticAlbumSet({ startPosition = [0, 0], planeNumbers = [] }) {
   if (!Array.isArray(planeNumbers) || planeNumbers.length === 0) return null;
 
+  // mini/p1.png 텍스처 불러오기
+  const miniTexture = useLoader(TextureLoader, '/2d/mini/p1.png');
+
   return (
     <>
       {planeNumbers.map((planeNumber, index) => (
@@ -411,11 +425,15 @@ export function StaticAlbumSet({ startPosition = [0, 0], planeNumbers = [] }) {
           position={[
             startPosition[0] - (index >= 2 ? 1 : 0),
             -5.5,
-            11.8 + (index % 2 === 1 ? 1.1 : 0)
+            11.8 + (index % 2 === 1 ? 1.1 : 0) - 0.1
           ]}
           planeNumber={planeNumber}
         />
       ))}
+      <mesh position={[startPosition[0] - 0.4, -5.6, 11.6]} rotation={[-Math.PI / 2, 0, 0]}>
+        <boxGeometry args={[2.8, 3.6, 0.1]} />
+        <meshStandardMaterial map={miniTexture} />
+      </mesh>
     </>
   );
 }

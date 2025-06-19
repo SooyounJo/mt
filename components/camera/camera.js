@@ -53,9 +53,10 @@ export default function FixedCameraView({
       camera.lookAt(5, -7, 0);
       camera.updateProjectionMatrix();
     } else if (view === 3) {
-      camera.position.set(-3.5, 9, 17.8);
-      camera.fov = 30;  // FOV를 낮춰서 왜곡 감소
-      camera.lookAt(-3.5, -5, 10);
+      const custom = typeof window !== 'undefined' && window._customCam3Pos ? window._customCam3Pos : {x: 1, y: 3, z: 14};
+      camera.position.set(custom.x, custom.y, custom.z);
+      camera.fov = 35;
+      camera.lookAt(1, -10, 10);
       camera.updateProjectionMatrix();
     } else if (view === 4) {
       camera.position.set(15, 15, 25);
