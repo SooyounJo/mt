@@ -47,6 +47,13 @@ export default function MainPage() {
     cameraControl.setIsOrbitEnabled(false);
   }, []);
 
+  // 입장 시 정보 미입력 시 intro로 리다이렉트
+  useEffect(() => {
+    if (!name || !destination) {
+      router.replace('/intro');
+    }
+  }, [name, destination]);
+
   // 버튼 상태 관리 최적화
   const [buttonState, setButtonState] = React.useState({
     canGoNext: true,
